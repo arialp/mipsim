@@ -4,62 +4,231 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class AssemblySimulatorGUI {
-  private JTextArea assemblyInput;
-  private JTextArea binaryOutput;
-  private JTextArea instructionMemoryOutput;
-  private JTextArea registerOutput;
-  private JTextArea memoryOutput;
-
+  private static final Font TEXT_FONT = new Font("Cascadia Mono", Font.PLAIN, 16);
+  private final JTextArea assemblyInput;
+  private final JTextArea machineCodeOutput;
+  private final JTextArea registerFileLeft;
+  private final JTextArea registerFileRight;
+  private final JTextArea instructionMemoryOutput;
+  private final JTextArea dataMemoryOutput;
+  private final JButton hexButton;
+  private final JButton binaryButton;
+  private final JButton assembleButton;
+  private final JButton stepButton;
+  private final JButton runButton;
+  private final JButton resetButton;
   private Simulator simulator;
+  private boolean displayInHex = false;
+
+  public static void main(String[] args) {
+    SwingUtilities.invokeLater(AssemblySimulatorGUI :: new);
+  }
 
   public AssemblySimulatorGUI() {
-    JFrame frame = new JFrame("Assembly Simulator");
+    // Ana pencere
+    JFrame frame = new JFrame("MIPS Assembly Simulator");
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    frame.setSize(1000, 600);
+    frame.setSize(1280, 720);
+    frame.getContentPane().setBackground(Color.BLACK);
 
-    JPanel mainPanel = new JPanel(new BorderLayout());
+    // Ana panel
+    JPanel mainPanel = new JPanel(new GridBagLayout());
+    mainPanel.setBackground(Color.BLACK);
 
-    // Assembly kod girişi
-    assemblyInput = new JTextArea(10, 50);
-    JScrollPane assemblyScroll = new JScrollPane(assemblyInput);
-    mainPanel.add(assemblyScroll, BorderLayout.NORTH);
+    // Top panel constraints
+    GridBagConstraints topPanelConstraints = new GridBagConstraints();
+    topPanelConstraints.gridx = 0;
+    topPanelConstraints.gridy = 0;
+    topPanelConstraints.weightx = 1;
+    topPanelConstraints.weighty = 0.5;
+    topPanelConstraints.fill = GridBagConstraints.BOTH;
 
-    // Çıktı alanları
-    JPanel outputPanel = new JPanel(new GridLayout(1, 4));
-    binaryOutput = new JTextArea();
-    binaryOutput.setEditable(false);
-    outputPanel.add(new JScrollPane(binaryOutput));
+    // Memory panel constraints
+    GridBagConstraints memoryPanelConstraints = new GridBagConstraints();
+    memoryPanelConstraints.gridx = 0;
+    memoryPanelConstraints.gridy = 1;
+    memoryPanelConstraints.weightx = 1;
+    memoryPanelConstraints.weighty = 0.48;
+    memoryPanelConstraints.fill = GridBagConstraints.BOTH;
 
-    instructionMemoryOutput = new JTextArea();
+    // Bottom panel constraints
+    GridBagConstraints bottomPanelConstraints = new GridBagConstraints();
+    bottomPanelConstraints.gridx = 0;
+    bottomPanelConstraints.gridy = 2;
+    bottomPanelConstraints.weightx = 1;
+    bottomPanelConstraints.weighty = 0.02;
+    bottomPanelConstraints.fill = GridBagConstraints.BOTH;
+
+    // Üst panel (Assembly Instructions, Machine Code, Register File)
+    JPanel topPanel = new JPanel(new GridLayout(1, 3));
+    topPanel.setBackground(Color.BLACK);
+
+    // Assembly Instructions
+    assemblyInput = createTextArea("ASSEMBLY INSTRUCTIONS");
+    topPanel.add(new JScrollPane(assemblyInput));
+
+    // Machine Code Paneli
+    JPanel machineCodePanel = new JPanel(new BorderLayout());
+    machineCodePanel.setBackground(Color.BLACK);
+    machineCodePanel.setBorder(
+            BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.GRAY),
+                                             "MACHINE CODE", 2, 2, TEXT_FONT, Color.WHITE));
+
+    machineCodeOutput = createTextArea();
+    machineCodeOutput.setEditable(false);
+    machineCodePanel.add(new JScrollPane(machineCodeOutput), BorderLayout.CENTER);
+
+    // HEX/BINARY Butonları
+    JPanel buttonPanel = new JPanel(new GridLayout(1, 2));
+    buttonPanel.setBackground(Color.BLACK);
+    hexButton = createButton("HEX");
+    binaryButton = createButton("BINARY");
+    buttonPanel.add(hexButton);
+    buttonPanel.add(binaryButton);
+
+    machineCodePanel.add(buttonPanel, BorderLayout.SOUTH);
+    topPanel.add(machineCodePanel);
+
+    // Create registerFilePanel with GridLayout and set its title
+    JPanel registerFilePanel = new JPanel(new GridLayout(1, 2));
+    registerFilePanel.setBackground(Color.BLACK);
+    registerFilePanel.setBorder(
+            BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.GRAY),
+                                             "Register File", 2, 2, TEXT_FONT, Color.WHITE));
+
+    // Create two text areas for register file without titles
+    registerFileLeft = createTextArea();
+    registerFileLeft.setEditable(false);
+    registerFileRight = createTextArea();
+    registerFileRight.setEditable(false);
+
+    // Add text areas to registerFilePanel
+    registerFilePanel.add(new JScrollPane(registerFileLeft));
+    registerFilePanel.add(new JScrollPane(registerFileRight));
+
+    // Add registerFilePanel to topPanel
+    topPanel.add(registerFilePanel);
+    mainPanel.add(topPanel, topPanelConstraints);
+
+    // Instruction Memory ve Data Memory Paneli
+    JPanel memoryPanel = new JPanel(new GridLayout(1, 2));
+    memoryPanel.setBackground(Color.BLACK);
+
+    // Instruction Memory ve Program Counter Paneli
+    instructionMemoryOutput = createTextArea("INSTRUCTION MEMORY");
     instructionMemoryOutput.setEditable(false);
-    outputPanel.add(new JScrollPane(instructionMemoryOutput));
+    memoryPanel.add(new JScrollPane(instructionMemoryOutput));
 
-    registerOutput = new JTextArea();
-    registerOutput.setEditable(false);
-    outputPanel.add(new JScrollPane(registerOutput));
+    dataMemoryOutput = createTextArea("DATA MEMORY");
+    dataMemoryOutput.setEditable(false);
+    memoryPanel.add(new JScrollPane(dataMemoryOutput));
 
-    memoryOutput = new JTextArea();
-    memoryOutput.setEditable(false);
-    outputPanel.add(new JScrollPane(memoryOutput));
-    mainPanel.add(outputPanel, BorderLayout.CENTER);
+    mainPanel.add(memoryPanel, memoryPanelConstraints);
 
-    // Kontrol butonları
-    JPanel buttonPanel = new JPanel();
-    JButton assembleButton = new JButton("Assemble");
-    JButton stepButton = new JButton("Next Step");
-    JButton resetButton = new JButton("Reset");
+    // Alt buton paneli
+    JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+    bottomPanel.setBackground(Color.BLACK);
 
-    assembleButton.addActionListener(new AssembleListener());
-    stepButton.addActionListener(new StepListener());
-    resetButton.addActionListener(new ResetListener());
+    assembleButton = createButton("Assemble");
+    runButton = createButton("Run");
+    stepButton = createButton("Next Step");
+    resetButton = createButton("Reset");
 
-    buttonPanel.add(assembleButton);
-    buttonPanel.add(stepButton);
-    buttonPanel.add(resetButton);
-    mainPanel.add(buttonPanel, BorderLayout.SOUTH);
+    bottomPanel.add(assembleButton);
+    bottomPanel.add(runButton);
+    bottomPanel.add(stepButton);
+    bottomPanel.add(resetButton);
+    mainPanel.add(bottomPanel, bottomPanelConstraints);
 
     frame.add(mainPanel);
     frame.setVisible(true);
+
+    // Event Listeners
+    hexButton.addActionListener(e->updateMachineCode(true));
+    binaryButton.addActionListener(e->updateMachineCode(false));
+    assembleButton.addActionListener(new AssembleListener());
+    runButton.addActionListener(new RunListener());
+    stepButton.addActionListener(new StepListener());
+    resetButton.addActionListener(new ResetListener());
+  }
+
+  private JTextArea createTextArea(String title) {
+    JTextArea textArea = new JTextArea();
+    textArea.setFont(TEXT_FONT);
+    textArea.setBackground(Color.DARK_GRAY);
+    textArea.setForeground(Color.WHITE);
+    textArea.setCaretColor(Color.WHITE);
+    textArea.setBorder(
+            BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.GRAY), title, 2,
+                                             2, TEXT_FONT, Color.WHITE));
+    return textArea;
+  }
+
+  private JTextArea createTextArea() {
+    return createTextArea("");
+  }
+
+  private JButton createButton(String text) {
+    JButton button = new JButton(text);
+    button.setFont(TEXT_FONT);
+    button.setForeground(Color.WHITE);
+    button.setBackground(Color.DARK_GRAY);
+    button.setFocusPainted(false);
+    return button;
+  }
+
+  private void updateMachineCode(boolean toHex) {
+    displayInHex = toHex;
+    if(simulator != null){
+      StringBuilder output = new StringBuilder();
+      for(int i = 0; i < simulator.getInstructionMemorySize() * 4; i += 4){
+        String instruction = simulator.getInstruction(i + 0x00400000);
+        output.append(toHex ? toHexadecimal(instruction) : instruction).append("\n");
+      }
+      machineCodeOutput.setText(String.valueOf(output));
+      machineCodeOutput.setCaretPosition(0);
+    }
+  }
+
+  private String toHexadecimal(String binary) {
+    return String.format("0x%08X", Long.parseLong(binary, 2));
+  }
+
+  private void updateInstructionMemory() {
+    if(simulator != null){
+      // Instruction memory state'i al ve text alanına yazdır
+      instructionMemoryOutput.setText(simulator.getInstructionMemoryState());
+      instructionMemoryOutput.setCaretPosition(0); // Scroll'u en başa al
+    }
+  }
+
+  private void updateDataMemory() {
+    if(simulator != null){
+      dataMemoryOutput.setText(simulator.getMemoryState());
+      dataMemoryOutput.setCaretPosition(0);
+    }
+  }
+
+  private void updateRegisterFile() {
+    if(simulator != null){
+      String[][] registerState = simulator.getRegisterState();
+      StringBuilder leftOutput = new StringBuilder();
+      StringBuilder rightOutput = new StringBuilder();
+
+      for(int i = 0; i < 16; i++){
+        leftOutput.append(registerState[i][0]).append("\t").append(registerState[i][1])
+                  .append("\n");
+      }
+      for(int i = 16; i < 32; i++){
+        rightOutput.append(registerState[i][0]).append("\t").append(registerState[i][1])
+                   .append("\n");
+      }
+
+      registerFileLeft.setText(leftOutput.toString());
+      registerFileLeft.setCaretPosition(0);
+      registerFileRight.setText(rightOutput.toString());
+      registerFileRight.setCaretPosition(0);
+    }
   }
 
   private class AssembleListener implements ActionListener {
@@ -67,23 +236,10 @@ public class AssemblySimulatorGUI {
       String assemblyCode = assemblyInput.getText();
       simulator = new Simulator(assemblyCode);
 
-      // Binary kodu ve instruction memory'yi göster
-      StringBuilder binaryOutputBuilder = new StringBuilder();
-      StringBuilder instructionMemoryBuilder = new StringBuilder();
-
-      for(int i = 0; i < simulator.instructionMemory.size(); i++){
-        String instruction = simulator.instructionMemory.getInstruction(
-                i);
-        binaryOutputBuilder.append(instruction).append("\n");
-        instructionMemoryBuilder.append(i).append(": ")
-                                .append(instruction).append("\n");
-      }
-
-      binaryOutput.setText(binaryOutputBuilder.toString());
-      instructionMemoryOutput.setText(
-              instructionMemoryBuilder.toString());
-      registerOutput.setText(simulator.getRegisterState());
-      memoryOutput.setText(simulator.getMemoryState());
+      updateMachineCode(displayInHex);
+      updateInstructionMemory();
+      updateRegisterFile();
+      updateDataMemory();
     }
   }
 
@@ -91,12 +247,22 @@ public class AssemblySimulatorGUI {
     public void actionPerformed(ActionEvent e) {
       if(simulator != null){
         simulator.executeNextStep();
+        updateInstructionMemory();
+        updateRegisterFile();
+        updateDataMemory();
+      }
+    }
+  }
 
-        // Instruction Memory'deki çalıştırılan talimatı vurgula
-        highlightCurrentInstruction(simulator.getProgramCounter());
-
-        registerOutput.setText(simulator.getRegisterState());
-        memoryOutput.setText(simulator.getMemoryState());
+  private class RunListener implements ActionListener {
+    public void actionPerformed(ActionEvent e) {
+      if(simulator != null){
+        while(!simulator.isFinished()){
+          simulator.executeNextStep();
+          updateInstructionMemory();
+          updateRegisterFile();
+          updateDataMemory();
+        }
       }
     }
   }
@@ -105,31 +271,11 @@ public class AssemblySimulatorGUI {
     public void actionPerformed(ActionEvent e) {
       if(simulator != null){
         simulator.reset();
-        binaryOutput.setText("");
-        instructionMemoryOutput.setText("");
-        registerOutput.setText("");
-        memoryOutput.setText("");
+        updateMachineCode(displayInHex);
+        updateInstructionMemory();
+        updateRegisterFile();
+        updateDataMemory();
       }
     }
-  }
-
-  private void highlightCurrentInstruction(int programCounter) {
-    try{
-      instructionMemoryOutput.getHighlighter().removeAllHighlights();
-      int start = instructionMemoryOutput.getLineStartOffset(
-              programCounter);
-      int end = instructionMemoryOutput.getLineEndOffset(
-              programCounter);
-      instructionMemoryOutput.getHighlighter()
-                             .addHighlight(start, end,
-                                           new javax.swing.text.DefaultHighlighter.DefaultHighlightPainter(
-                                                   Color.YELLOW));
-    } catch(Exception ex){
-      ex.printStackTrace();
-    }
-  }
-
-  public static void main(String[] args) {
-    new AssemblySimulatorGUI();
   }
 }
