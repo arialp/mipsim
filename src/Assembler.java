@@ -1,11 +1,22 @@
-import java.util.*;
+/**
+ * The Assembler class converts MIPS assembly code into machine code. It handles label parsing,
+ * binary conversion, and supports R, I, and J-type instructions.
+ */
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class Assembler {
 
-  // Label ve adres haritası
+  /**
+   * Map of labels and their corresponding memory addresses.
+   */
   private static final Map<String, Integer> labelMap = new HashMap<>();
 
-  // Assembly kodlarını binary'e çevirme talimatları
+  /**
+   * Map of assembly instructions to their binary opcodes.
+   */
   private static final Map<String, String> instructionMap = new HashMap<>() {{
     // R-Format instructions
     put("add", "000000");
@@ -29,7 +40,9 @@ public class Assembler {
     put("jr", "000000"); // special case, handled separately
   }};
 
-  // Function codes for R-type instructions
+  /**
+   * Map of R-type instructions to their binary function codes.
+   */
   private static final Map<String, String> functMap = new HashMap<>() {{
     put("add", "100000");
     put("sub", "100010");
@@ -41,14 +54,21 @@ public class Assembler {
     put("jr", "001000");
   }};
 
+  /**
+   * Assembles the given MIPS assembly code into machine code.
+   *
+   * @param assemblyCode The MIPS assembly code as a string.
+   *
+   * @return A list of binary machine code instructions.
+   */
   public List<String> assemble(String assemblyCode) {
     List<String> binaryInstructions;
     String[] lines = assemblyCode.split("\n");
     List<String> assemblyLines = new ArrayList<>();
 
-    // Yorumları kaldır ve temiz assembly satırlarını listeye ekle
+    // Remove comments and clean up assembly lines
     for(String line : lines){
-      line = line.split("#")[0].trim(); // Yorumları çıkar ve temizle
+      line = line.split("#")[0].trim(); // Remove comments
       if(!line.isEmpty()){
         assemblyLines.add(line);
       }
@@ -60,22 +80,32 @@ public class Assembler {
     return binaryInstructions;
   }
 
+  /**
+   * Parses labels in the assembly code and maps them to their corresponding memory addresses.
+   *
+   * @param assemblyLines A list of assembly code lines.
+   */
   private static void parseLabels(List<String> assemblyLines) {
     int currentAddress = 0;
     for(String line : assemblyLines){
       line = line.trim();
       if(line.endsWith(":")){
-        String label = line.substring(0, line.length() - 1).trim();  // Etiketi ayıklama
-        labelMap.put(label, currentAddress * 4 + 0x00400000);  // Etiket adresini haritaya ekleme
+        String label = line.substring(0, line.length() - 1).trim(); // Extract the label
+        labelMap.put(label, currentAddress * 4 + 0x00400000); // Map label to memory address
       } else if(!line.isEmpty()){
-        currentAddress++;  // Label değilse, satırdaki komutun adresini arttır
+        currentAddress++; // Increment address for non-label lines
       }
     }
   }
 
-  // İkinci geçiş: Assembly'yi binary'ye çevir
-  public static List<String> convertToBinary(List<String> assemblyLines)
-  {
+  /**
+   * Converts assembly instructions to binary machine code.
+   *
+   * @param assemblyLines A list of assembly code lines.
+   *
+   * @return A list of binary machine code instructions.
+   */
+  public static List<String> convertToBinary(List<String> assemblyLines) {
     List<String> binaryCode = new ArrayList<>();
     int currentLine = 0;
 
@@ -136,59 +166,45 @@ public class Assembler {
             String rs = registerToBinary(parts[1]);
             String rt = registerToBinary(parts[2]);
             String label = parts[3];
-            Integer targetAddress = labelMap.get(label); // Etiket adresi
+            Integer targetAddress = labelMap.get(label); // Label address
 
             if(targetAddress == null){
-              System.err.println("Etiket bulunamadı: " + label);
+              System.err.println("Label not found: " + label);
             } else {
-              // Hedef adres ile mevcut talimat adresi arasındaki fark
+              // Calculate relative offset
               int currentPC = currentLine * 4 + 0x00400000;
               int relativeOffset = (targetAddress - (currentPC + 4)) / 4;
-
-              // Relative offset 16-bit signed olacak
               binaryCode.add(binaryInstruction + rs + rt + toBinary(relativeOffset, 16));
             }
             break;
           }
 
           // J-format instructions
-          case "j":{
-            String label = parts[1];
-            Integer address = labelMap.get(label);  // Etiket adresi
-            if(address == null){
-              System.err.println("Etiket bulunamadı: " + label);
-            } else {
-              int targetAddress = address / 4;
-              binaryCode.add(binaryInstruction + toBinary(targetAddress, 26));
-            }
-            break;
-          }
-
+          case "j":
           case "jal":{
             String label = parts[1];
-            Integer address = labelMap.get(label);  // Etiket adresi
+            Integer address = labelMap.get(label); // Label address
             if(address == null){
-              System.err.println("Etiket bulunamadı: " + label);
+              System.err.println("Label not found: " + label);
             } else {
               int targetAddress = address / 4;
               binaryCode.add(binaryInstruction + toBinary(targetAddress, 26));
             }
             break;
           }
-
           case "jr":{
-            String rs = registerToBinary(parts[1]);  // Register adresi
+            String rs = registerToBinary(parts[1]); // Register address
             String funct = functMap.get(instruction);
             binaryCode.add("000000" + rs + "00000" + "00000" + "00000" + funct);
             break;
           }
 
           default:{
-            System.err.println("Desteklenmeyen talimat: " + instruction);
+            System.err.println("Unsupported instruction: " + instruction);
           }
         }
       } catch(NumberFormatException|ArrayIndexOutOfBoundsException e){
-        System.err.println("Hata: Talimat işlenirken bir hata oluştu. Talimat: " + line);
+        System.err.println("Error processing instruction: " + line);
       }
 
       currentLine++;
@@ -196,7 +212,13 @@ public class Assembler {
     return binaryCode;
   }
 
-  // Register'ı binary'ye çevir
+  /**
+   * Converts a register name to its binary representation.
+   *
+   * @param register The name of the register (e.g., $t0, $a0).
+   *
+   * @return The binary representation of the register.
+   */
   private static String registerToBinary(String register) {
     Map<String, String> registerMap = new HashMap<>() {{
       put("$zero", "00000");
@@ -235,7 +257,14 @@ public class Assembler {
     return registerMap.getOrDefault(register, "00000");
   }
 
-  // Değeri binary stringe çevir (işaretli/signed)
+  /**
+   * Converts an integer value to its binary representation with a specified number of bits.
+   *
+   * @param value The integer value to convert.
+   * @param bits The number of bits for the binary representation.
+   *
+   * @return The binary representation of the value as a string.
+   */
   private static String toBinary(int value, int bits) {
     String binary = Integer.toBinaryString(value&((1 << bits) - 1));
     while(binary.length() < bits){

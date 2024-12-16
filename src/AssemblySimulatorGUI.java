@@ -1,3 +1,8 @@
+/**
+ * This class represents a GUI for simulating a MIPS assembly program. It provides components for
+ * inputting assembly code, displaying machine code, and monitoring instruction memory, data memory,
+ * and register state.
+ */
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -20,22 +25,28 @@ public class AssemblySimulatorGUI {
   private Simulator simulator;
   private boolean displayInHex = false;
 
+  /**
+   * The main entry point for launching the GUI.
+   *
+   * @param args Command-line arguments (not used).
+   */
   public static void main(String[] args) {
     SwingUtilities.invokeLater(AssemblySimulatorGUI :: new);
   }
 
+  /**
+   * Constructs the AssemblySimulatorGUI with all its components.
+   * Initializes the layout, text areas, buttons, and event listeners.
+   */
   public AssemblySimulatorGUI() {
-    // Ana pencere
     JFrame frame = new JFrame("MIPS Assembly Simulator");
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     frame.setSize(1280, 720);
     frame.getContentPane().setBackground(Color.BLACK);
 
-    // Ana panel
     JPanel mainPanel = new JPanel(new GridBagLayout());
     mainPanel.setBackground(Color.BLACK);
 
-    // Top panel constraints
     GridBagConstraints topPanelConstraints = new GridBagConstraints();
     topPanelConstraints.gridx = 0;
     topPanelConstraints.gridy = 0;
@@ -43,7 +54,6 @@ public class AssemblySimulatorGUI {
     topPanelConstraints.weighty = 0.5;
     topPanelConstraints.fill = GridBagConstraints.BOTH;
 
-    // Memory panel constraints
     GridBagConstraints memoryPanelConstraints = new GridBagConstraints();
     memoryPanelConstraints.gridx = 0;
     memoryPanelConstraints.gridy = 1;
@@ -51,7 +61,6 @@ public class AssemblySimulatorGUI {
     memoryPanelConstraints.weighty = 0.48;
     memoryPanelConstraints.fill = GridBagConstraints.BOTH;
 
-    // Bottom panel constraints
     GridBagConstraints bottomPanelConstraints = new GridBagConstraints();
     bottomPanelConstraints.gridx = 0;
     bottomPanelConstraints.gridy = 2;
@@ -59,15 +68,12 @@ public class AssemblySimulatorGUI {
     bottomPanelConstraints.weighty = 0.02;
     bottomPanelConstraints.fill = GridBagConstraints.BOTH;
 
-    // Üst panel (Assembly Instructions, Machine Code, Register File)
     JPanel topPanel = new JPanel(new GridLayout(1, 3));
     topPanel.setBackground(Color.BLACK);
 
-    // Assembly Instructions
     assemblyInput = createTextArea("ASSEMBLY INSTRUCTIONS");
     topPanel.add(new JScrollPane(assemblyInput));
 
-    // Machine Code Paneli
     JPanel machineCodePanel = new JPanel(new BorderLayout());
     machineCodePanel.setBackground(Color.BLACK);
     machineCodePanel.setBorder(
@@ -78,7 +84,6 @@ public class AssemblySimulatorGUI {
     machineCodeOutput.setEditable(false);
     machineCodePanel.add(new JScrollPane(machineCodeOutput), BorderLayout.CENTER);
 
-    // HEX/BINARY Butonları
     JPanel buttonPanel = new JPanel(new GridLayout(1, 2));
     buttonPanel.setBackground(Color.BLACK);
     hexButton = createButton("HEX");
@@ -89,32 +94,26 @@ public class AssemblySimulatorGUI {
     machineCodePanel.add(buttonPanel, BorderLayout.SOUTH);
     topPanel.add(machineCodePanel);
 
-    // Create registerFilePanel with GridLayout and set its title
     JPanel registerFilePanel = new JPanel(new GridLayout(1, 2));
     registerFilePanel.setBackground(Color.BLACK);
     registerFilePanel.setBorder(
             BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.GRAY),
                                              "Register File", 2, 2, TEXT_FONT, Color.WHITE));
 
-    // Create two text areas for register file without titles
     registerFileLeft = createTextArea();
     registerFileLeft.setEditable(false);
     registerFileRight = createTextArea();
     registerFileRight.setEditable(false);
 
-    // Add text areas to registerFilePanel
     registerFilePanel.add(new JScrollPane(registerFileLeft));
     registerFilePanel.add(new JScrollPane(registerFileRight));
 
-    // Add registerFilePanel to topPanel
     topPanel.add(registerFilePanel);
     mainPanel.add(topPanel, topPanelConstraints);
 
-    // Instruction Memory ve Data Memory Paneli
     JPanel memoryPanel = new JPanel(new GridLayout(1, 2));
     memoryPanel.setBackground(Color.BLACK);
 
-    // Instruction Memory ve Program Counter Paneli
     instructionMemoryOutput = createTextArea("INSTRUCTION MEMORY");
     instructionMemoryOutput.setEditable(false);
     memoryPanel.add(new JScrollPane(instructionMemoryOutput));
@@ -125,7 +124,6 @@ public class AssemblySimulatorGUI {
 
     mainPanel.add(memoryPanel, memoryPanelConstraints);
 
-    // Alt buton paneli
     JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
     bottomPanel.setBackground(Color.BLACK);
 
@@ -143,7 +141,6 @@ public class AssemblySimulatorGUI {
     frame.add(mainPanel);
     frame.setVisible(true);
 
-    // Event Listeners
     hexButton.addActionListener(e->updateMachineCode(true));
     binaryButton.addActionListener(e->updateMachineCode(false));
     assembleButton.addActionListener(new AssembleListener());
@@ -152,6 +149,13 @@ public class AssemblySimulatorGUI {
     resetButton.addActionListener(new ResetListener());
   }
 
+  /**
+   * Creates a styled JTextArea with the given title.
+   *
+   * @param title The title to display above the JTextArea.
+   *
+   * @return A styled JTextArea.
+   */
   private JTextArea createTextArea(String title) {
     JTextArea textArea = new JTextArea();
     textArea.setFont(TEXT_FONT);
@@ -164,10 +168,22 @@ public class AssemblySimulatorGUI {
     return textArea;
   }
 
+  /**
+   * Creates a styled JTextArea without a title.
+   *
+   * @return A styled JTextArea.
+   */
   private JTextArea createTextArea() {
     return createTextArea("");
   }
 
+  /**
+   * Creates a styled JButton with the given text.
+   *
+   * @param text The text to display on the button.
+   *
+   * @return A styled JButton.
+   */
   private JButton createButton(String text) {
     JButton button = new JButton(text);
     button.setFont(TEXT_FONT);
@@ -177,6 +193,11 @@ public class AssemblySimulatorGUI {
     return button;
   }
 
+  /**
+   * Updates the machine code display area with the current machine code.
+   *
+   * @param toHex If true, displays the machine code in hexadecimal; otherwise, binary.
+   */
   private void updateMachineCode(boolean toHex) {
     displayInHex = toHex;
     if(simulator != null){
@@ -190,18 +211,30 @@ public class AssemblySimulatorGUI {
     }
   }
 
+  /**
+   * Converts a binary string to its hexadecimal representation.
+   *
+   * @param binary The binary string to convert.
+   *
+   * @return The hexadecimal representation.
+   */
   private String toHexadecimal(String binary) {
     return String.format("0x%08X", Long.parseLong(binary, 2));
   }
 
+  /**
+   * Updates the instruction memory display area with the current instruction memory state.
+   */
   private void updateInstructionMemory() {
     if(simulator != null){
-      // Instruction memory state'i al ve text alanına yazdır
       instructionMemoryOutput.setText(simulator.getInstructionMemoryState());
-      instructionMemoryOutput.setCaretPosition(0); // Scroll'u en başa al
+      instructionMemoryOutput.setCaretPosition(0);
     }
   }
 
+  /**
+   * Updates the data memory display area with the current data memory state.
+   */
   private void updateDataMemory() {
     if(simulator != null){
       dataMemoryOutput.setText(simulator.getMemoryState());
@@ -209,6 +242,9 @@ public class AssemblySimulatorGUI {
     }
   }
 
+  /**
+   * Updates the register file display areas with the current register states.
+   */
   private void updateRegisterFile() {
     if(simulator != null){
       String[][] registerState = simulator.getRegisterState();
@@ -231,6 +267,9 @@ public class AssemblySimulatorGUI {
     }
   }
 
+  /**
+   * Event listener for the Assemble button. Initializes the simulator and updates all displays.
+   */
   private class AssembleListener implements ActionListener {
     public void actionPerformed(ActionEvent e) {
       String assemblyCode = assemblyInput.getText();
@@ -243,6 +282,9 @@ public class AssemblySimulatorGUI {
     }
   }
 
+  /**
+   * Event listener for the Step button. Executes one instruction and updates all displays.
+   */
   private class StepListener implements ActionListener {
     public void actionPerformed(ActionEvent e) {
       if(simulator != null){
@@ -254,6 +296,9 @@ public class AssemblySimulatorGUI {
     }
   }
 
+  /**
+   * Event listener for the Run button. Executes the program until completion and updates displays.
+   */
   private class RunListener implements ActionListener {
     public void actionPerformed(ActionEvent e) {
       if(simulator != null){
@@ -267,6 +312,9 @@ public class AssemblySimulatorGUI {
     }
   }
 
+  /**
+   * Event listener for the Reset button. Resets the simulator and clears all displays.
+   */
   private class ResetListener implements ActionListener {
     public void actionPerformed(ActionEvent e) {
       if(simulator != null){

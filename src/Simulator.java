@@ -1,5 +1,10 @@
 import java.util.List;
 
+/**
+ * Simulator class that executes MIPS assembly instructions. Manages the program counter, register
+ * file, data memory, and instruction memory. Provides methods to execute instructions step-by-step
+ * or reset the simulation.
+ */
 public class Simulator {
   private final InstructionMemory instructionMemory;
   private DataMemory dataMemory;
@@ -8,6 +13,12 @@ public class Simulator {
   private boolean isBranchOrJump;
   private boolean isFinished;
 
+  /**
+   * Constructor: Assembles the given MIPS assembly code, Loads assembled instructions into
+   * instruction memory, Initializes data memory and register file.
+   *
+   * @param assemblyCode MIPS assembly code to be executed
+   */
   public Simulator(String assemblyCode) {
     Assembler assembler = new Assembler();
     List<String> binaryInstructions = assembler.assemble(assemblyCode);
@@ -16,32 +27,43 @@ public class Simulator {
     this.dataMemory = new DataMemory();
     this.registerFile = new RegisterFile();
     this.programCounter = 0x00400000;
+
     registerFile.write(29, 0x0FFFFFFF); // stack pointer default value
     isFinished = false;
   }
 
+  /**
+   * Executes the next instruction in the program. Updates the program counter unless a branch or
+   * jump instruction modifies it.
+   */
   public void executeNextStep() {
     if(programCounter >= 0x00400000 + instructionMemory.size() * 4){
-      System.out.println("Program tamamlandı.");
+      System.out.println("Program Finished.");
       isFinished = true;
       return;
     }
 
-    isBranchOrJump = false; // Her adımda resetlenir
+    isBranchOrJump = false;
     String instruction = instructionMemory.getInstruction(programCounter);
     decodeAndExecute(instruction);
 
-    // Eğer PC manuel güncellenmediyse, PC'yi +4 arttır
+    // PC increment is handled by branch and jump instructions
     if(!isBranchOrJump){
       programCounter += 4;
     }
   }
 
+  /**
+   * Decodes the given MIPS instruction and executes it. Determines the instruction type based on
+   * the opcode and calls the appropriate execution method.
+   *
+   * @param instruction The binary string representation of the MIPS instruction to be executed
+   */
   private void decodeAndExecute(String instruction) {
-    String opcode = instruction.substring(0, 6); // İlk 6 bit opcode
+    String opcode = instruction.substring(0, 6); // 31-26 bits are opcode
 
     switch(opcode){
-      case "000000": // R-format talimatlar
+      case "000000": // R-Type instructions (add, sub, and, or, slt, sll, srl) and jr
         executeRFormat(instruction);
         break;
       case "001000": // addi
@@ -66,16 +88,23 @@ public class Simulator {
         executeJal(instruction);
         break;
       default:
-        System.out.println("Desteklenmeyen opcode: " + opcode);
+        System.out.println("Unsupported Opcode: " + opcode);
     }
   }
 
+  /**
+   * Executes the R-Type instructions. Decodes the instruction to determine the source, target, and
+   * destination registers, the shift amount, and the function code. Executes the appropriate
+   * operation based on the function code.
+   *
+   * @param instruction The binary string representation of the instruction to be executed
+   */
   private void executeRFormat(String instruction) {
-    int rs = Integer.parseInt(instruction.substring(6, 11), 2); // Kaynak register
-    int rt = Integer.parseInt(instruction.substring(11, 16), 2); // Hedef register
-    int rd = Integer.parseInt(instruction.substring(16, 21), 2); // Sonuç register
-    int shamt = Integer.parseInt(instruction.substring(21, 26), 2); // Shift miktarı
-    int funct = Integer.parseInt(instruction.substring(26, 32), 2); // Function kodu
+    int rs = Integer.parseInt(instruction.substring(6, 11), 2); // Source register
+    int rt = Integer.parseInt(instruction.substring(11, 16), 2); // Target register
+    int rd = Integer.parseInt(instruction.substring(16, 21), 2); // Destination register
+    int shamt = Integer.parseInt(instruction.substring(21, 26), 2); // Shift amount
+    int funct = Integer.parseInt(instruction.substring(26, 32), 2); // Function code
 
     switch(funct){
       case 32: // add
@@ -104,10 +133,17 @@ public class Simulator {
         isBranchOrJump = true;
         break;
       default:
-        System.out.println("Desteklenmeyen R-format funct: " + funct);
+        System.out.println("Unsupported R-Type Function Code " + funct);
     }
   }
 
+  /**
+   * Executes the addi instruction. Decodes the instruction to determine the source register, target
+   * register, and immediate value. Adds the immediate value to the value in the source register and
+   * stores the result in the target register.
+   *
+   * @param instruction The binary string representation of the instruction to be executed
+   */
   private void executeAddi(String instruction) {
     int rs = Integer.parseInt(instruction.substring(6, 11), 2);
     int rt = Integer.parseInt(instruction.substring(11, 16), 2);
@@ -116,85 +152,149 @@ public class Simulator {
     registerFile.write(rt, registerFile.read(rs) + immediate);
   }
 
-  private void executeSw(String instruction) {
-    int baseRegister = Integer.parseInt(instruction.substring(6, 11), 2);
-    int rt = Integer.parseInt(instruction.substring(11, 16), 2);
-    int offset = Integer.parseInt(instruction.substring(16), 2);
-
-    // Offset'in işaretini kontrol ederek signed genişletme yap
-    if((offset&0x8000) != 0){
-      offset |= 0xFFFF0000; // Sign extend
-    }
-
-    // Adres hesaplama: Stack pointer için offset çıkarılır
-    int address = registerFile.read(baseRegister) - offset;
-
-    // Veriyi belleğe kaydet
-    dataMemory.store(address, registerFile.read(rt));
-  }
-
+  /**
+   * Executes the lw (load word) instruction. Decodes the instruction to determine the source
+   * register, target register, and offset. Loads the word from memory at the address calculated by
+   * subtracting the offset to the value in the source register, and stores it in the target
+   * register.
+   *
+   * @param instruction The binary string representation of the instruction to be executed
+   */
   private void executeLw(String instruction) {
-    int baseRegister = Integer.parseInt(instruction.substring(6, 11), 2);
+    int rs = Integer.parseInt(instruction.substring(6, 11), 2);
     int rt = Integer.parseInt(instruction.substring(11, 16), 2);
     int offset = Integer.parseInt(instruction.substring(16), 2);
 
-    // Offset'in işaretini kontrol ederek signed genişletme yap
+    // Check the sign of the offset and sign-extend it, 16 -> 32
     if((offset&0x8000) != 0){
       offset |= 0xFFFF0000; // Sign extend
     }
 
-    // Adres hesaplama: Stack pointer için offset çıkarılır
-    int address = registerFile.read(baseRegister) - offset;
+    // Determine the address: Subtract the offset from the stack pointer, stack grows downwards
+    int address = registerFile.read(rs) - offset;
 
-    // Bellekten veriyi yükle
+    // $rt = Memory[address]
     registerFile.write(rt, dataMemory.load(address));
   }
 
+  /**
+   * Executes the sw (store word) instruction. Decodes the instruction to determine the source
+   * register, target register, and offset. Stores the word from the target register into memory at
+   * the address calculated by subtracting the offset from the value in the source register.
+   *
+   * @param instruction The binary string representation of the instruction to be executed
+   */
+  private void executeSw(String instruction) {
+    int rs = Integer.parseInt(instruction.substring(6, 11), 2);
+    int rt = Integer.parseInt(instruction.substring(11, 16), 2);
+    int offset = Integer.parseInt(instruction.substring(16), 2);
+
+    // Check the sign of the offset and sign-extend it, 16 -> 32
+    if((offset&0x8000) != 0){
+      offset |= 0xFFFF0000; // Sign extend
+    }
+
+    // Determine the address: Subtract the offset from the stack pointer, stack grows downwards
+    int address = registerFile.read(rs) - offset;
+
+    // Memory[address] = $rt
+    dataMemory.store(address, registerFile.read(rt));
+  }
+
+  /**
+   * Executes the beq (branch if equal) instruction. Decodes the instruction to determine the source
+   * register, target register, and offset. If the values in the source and target registers are
+   * equal, updates the program counter to the address calculated by adding the offset to the
+   * current program counter.
+   *
+   * @param instruction The binary string representation of the instruction to be executed
+   */
   private void executeBeq(String instruction) {
     int rs = Integer.parseInt(instruction.substring(6, 11), 2);
     int rt = Integer.parseInt(instruction.substring(11, 16), 2);
     int offset = Integer.parseInt(instruction.substring(16), 2);
 
-    // 16-bit signed offset'i doğru hesapla
-    if((offset&0x8000) != 0){ // Eğer MSB 1 ise, negatif bir sayı
+    // Check the sign of the offset and sign-extend it, 16 -> 32
+    if((offset&0x8000) != 0){
       offset |= 0xFFFF0000; // Sign-extend
     }
 
     if(registerFile.read(rs) == registerFile.read(rt)){
       programCounter = programCounter + 4 + (offset * 4); // PC + 4 + (offset << 2)
-      isBranchOrJump = true; // PC manuel olarak güncellendi
+      isBranchOrJump = true;
     }
   }
 
+  /**
+   * Executes the (branch if not equal) instruction. Decodes the instruction to determine the source
+   * register, target register, and offset. If the values in the source and target registers are not
+   * equal, updates the program counter to the address calculated by adding the offset to the
+   * current program counter.
+   *
+   * @param instruction The binary string representation of the instruction to be executed
+   */
   private void executeBne(String instruction) {
     int rs = Integer.parseInt(instruction.substring(6, 11), 2);
     int rt = Integer.parseInt(instruction.substring(11, 16), 2);
     int offset = Integer.parseInt(instruction.substring(16), 2);
 
-    // 16-bit signed offset'i doğru hesapla
-    if((offset&0x8000) != 0){ // Eğer MSB 1 ise, negatif bir sayı
+    // Check the sign of the offset and sign-extend it, 16 -> 32
+    if((offset&0x8000) != 0){
       offset |= 0xFFFF0000; // Sign-extend
     }
 
     if(registerFile.read(rs) != registerFile.read(rt)){
       programCounter = programCounter + 4 + (offset * 4); // PC + 4 + (offset << 2)
-      isBranchOrJump = true; // PC manuel olarak güncellendi
+      isBranchOrJump = true;
     }
   }
 
+  /**
+   * Executes the j (jump) instruction. Decodes the instruction to determine the target address.
+   * Updates the program counter to the target address.
+   *
+   * @param instruction The binary string representation of the instruction to be executed
+   */
   private void executeJ(String instruction) {
     int targetAddress = Integer.parseInt(instruction.substring(6), 2);
+    // To extend targetAddress from 26 bits to 32 bits,
+    // shift left by 2, now 28 bits
+    // PC[31:28] -> targetAddress, now 32 bits
     programCounter = (programCounter&0xF0000000)|targetAddress << 2;
     isBranchOrJump = true;
   }
 
+  /**
+   * Executes the jal (jump and link) instruction. Decodes the instruction to determine the target
+   * address. Saves the return address (current PC + 4) in the $ra register. Updates the program
+   * counter to the target address.
+   *
+   * @param instruction The binary string representation of the instruction to be executed
+   */
   private void executeJal(String instruction) {
     int targetAddress = Integer.parseInt(instruction.substring(6), 2);
     registerFile.write(31, programCounter + 4); // Return address in $ra
+    // To extend targetAddress from 26 bits to 32 bits,
+    // shift left by 2, now 28 bits
+    // PC[31:28] -> targetAddress, now 32 bits
     programCounter = (programCounter&0xF0000000)|targetAddress << 2;
     isBranchOrJump = true;
   }
 
+  /**
+   * Resets the simulator to its initial state. Resets the program counter, data memory, and
+   * register file. Sets the stack pointer to its default value and marks the simulation as not
+   * finished.
+   */
+  public void reset() {
+    this.programCounter = 0x00400000;
+    this.dataMemory = new DataMemory();
+    this.registerFile = new RegisterFile();
+    registerFile.write(29, 0x0FFFFFFF); // stack pointer default value
+    isFinished = false;
+  }
+
+  // Getters
   public String[][] getRegisterState() {
     return registerFile.getRegisterState();
   }
@@ -213,14 +313,6 @@ public class Simulator {
 
   public String getInstruction(int address) {
     return instructionMemory.getInstruction(address);
-  }
-
-  public void reset() {
-    this.programCounter = 0x00400000;
-    this.dataMemory = new DataMemory();
-    this.registerFile = new RegisterFile();
-    registerFile.write(29, 0x0FFFFFFF); // stack pointer default value
-    isFinished = false;
   }
 
   public boolean isFinished() {
