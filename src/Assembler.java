@@ -35,7 +35,6 @@ public class Assembler {
     put("sub", "100010");
     put("and", "100100");
     put("or", "100101");
-    put("xor", "100110");
     put("slt", "101010");
     put("sll", "000000");
     put("srl", "000010");
@@ -45,7 +44,15 @@ public class Assembler {
   public List<String> assemble(String assemblyCode) {
     List<String> binaryInstructions;
     String[] lines = assemblyCode.split("\n");
-    List<String> assemblyLines = Arrays.asList(lines);
+    List<String> assemblyLines = new ArrayList<>();
+
+    // Yorumları kaldır ve temiz assembly satırlarını listeye ekle
+    for(String line : lines){
+      line = line.split("#")[0].trim(); // Yorumları çıkar ve temizle
+      if(!line.isEmpty()){
+        assemblyLines.add(line);
+      }
+    }
 
     parseLabels(assemblyLines);
     binaryInstructions = convertToBinary(assemblyLines);

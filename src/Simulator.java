@@ -4,7 +4,7 @@ public class Simulator {
   private final InstructionMemory instructionMemory;
   private DataMemory dataMemory;
   private RegisterFile registerFile;
-  private int programCounter; // 32-bit PC (Least significant 2 bit: 0)
+  private int programCounter;
   private boolean isBranchOrJump;
   private boolean isFinished;
 
