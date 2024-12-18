@@ -49,6 +49,10 @@ public class InstructionMemory {
    */
   public String getInstruction(int address) {
     int index = convertAddressToIndex(address);
+    if(index < 0 || index >= instructions.length){
+      throw new IndexOutOfBoundsException(
+              "Invalid instruction address: " + Integer.toHexString(address));
+    }
     return instructions[index];
   }
 
@@ -58,17 +62,22 @@ public class InstructionMemory {
    * @param address The memory address to convert.
    *
    * @return The corresponding index in the instruction array.
-   *
-   * @throws IndexOutOfBoundsException If the address is invalid or out of range.
    */
-  private int convertAddressToIndex(int address) {
+  static private int convertAddressToIndex(int address) {
     int baseAddress = 0x00400000;
-    int offset = (address - baseAddress) / 4;
-    if(offset < 0 || offset >= instructions.length){
-      throw new IndexOutOfBoundsException(
-              "Invalid instruction address: " + Integer.toHexString(address));
-    }
-    return offset;
+    return (address - baseAddress) / 4;
+  }
+
+  /**
+   * Converts an index in the instruction array to a memory address.
+   *
+   * @param index The index in the instruction array.
+   *
+   * @return The corresponding memory address.
+   */
+  static private int convertIndexToAddress(int index) {
+    int baseAddress = 0x00400000;
+    return baseAddress + (index * 4);
   }
 
   /**
@@ -83,39 +92,19 @@ public class InstructionMemory {
   /**
    * Generates a formatted string representing the current state of the instruction memory.
    *
-   * @param programCounter The current program counter value.
-   *
    * @return A formatted string showing the instructions, their addresses, and the current PC.
    */
-  public String getInstructionMemoryState(int programCounter) {
-    StringBuilder state = new StringBuilder();
-
-    state.append(String.format("Address     Byte 1   Byte 2   Byte 3   Byte 4   PC = 0x%08X\n",
-                               programCounter));
+  public String[][] getInstructionMemoryState() {
+    String[][] state = new String[instructions.length][2];
 
     for(int i = 0; i < instructions.length; i++){
-      int address = 0x00400000 + (i * 4); // Instruction address
+      String address = String.format("0x%08X", convertIndexToAddress(i));
       String instruction = instructions[i];
 
-      // Split 32-bit instruction into 8-bit segments
-      String[] instructionParts = new String[4];
-      for(int j = 0; j < 4; j++){
-        instructionParts[j] = instruction.substring(j * 8, (j + 1) * 8);
-      }
-
-      // Append address and instruction parts
-      state.append(String.format("0x%08X: %s %s %s %s", address, instructionParts[0],
-                                 instructionParts[1], instructionParts[2], instructionParts[3]));
-
-      // Highlight the current PC address
-      if(address == programCounter){
-        state.append(" <- PC");
-      }
-
-      state.append("\n");
+      state[i][0] = address;
+      state[i][1] = instruction;
     }
 
-    return state.toString();
+    return state;
   }
-
 }

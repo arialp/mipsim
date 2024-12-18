@@ -35,8 +35,8 @@ public class AssemblySimulatorGUI {
   }
 
   /**
-   * Constructs the AssemblySimulatorGUI with all its components.
-   * Initializes the layout, text areas, buttons, and event listeners.
+   * Constructs the AssemblySimulatorGUI with all its components. Initializes the layout, text
+   * areas, buttons, and event listeners.
    */
   public AssemblySimulatorGUI() {
     JFrame frame = new JFrame("MIPS Assembly Simulator");
@@ -227,7 +227,32 @@ public class AssemblySimulatorGUI {
    */
   private void updateInstructionMemory() {
     if(simulator != null){
-      instructionMemoryOutput.setText(simulator.getInstructionMemoryState());
+      StringBuilder instructionMemoryState = new StringBuilder();
+      int programCounter = simulator.getProgramCounter();
+      String[][] instructionMemory = simulator.getInstructionMemoryState();
+
+      instructionMemoryState.append(
+              String.format("Address     Byte 1   Byte 2   Byte 3   Byte 4   PC = 0x%08X\n",
+                            programCounter));
+
+      for(String[] addresses : instructionMemory){
+        // Split 32-bit instruction into 8-bit segments
+        String[] instructionParts = {addresses[1].substring(0, 8), addresses[1].substring(8, 16),
+                                     addresses[1].substring(16, 24),
+                                     addresses[1].substring(24, 32)};
+
+        // Append address and instruction parts
+        String address = addresses[0];
+        instructionMemoryState.append(
+                String.format("%s: %s %s %s %s", address, instructionParts[0], instructionParts[1],
+                              instructionParts[2], instructionParts[3]));
+        if(Long.parseLong(address.substring(2), 16) == programCounter){
+          instructionMemoryState.append(" <- PC");
+        }
+        instructionMemoryState.append("\n");
+      }
+
+      instructionMemoryOutput.setText(instructionMemoryState.toString());
       instructionMemoryOutput.setCaretPosition(0);
     }
   }

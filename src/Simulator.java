@@ -306,8 +306,8 @@ public class Simulator {
     return dataMemory.getMemoryState();
   }
 
-  public String getInstructionMemoryState() {
-    return instructionMemory.getInstructionMemoryState(programCounter);
+  public String[][] getInstructionMemoryState() {
+    return instructionMemory.getInstructionMemoryState();
   }
 
   public int getInstructionMemorySize() {
