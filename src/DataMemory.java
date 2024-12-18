@@ -6,9 +6,9 @@ public class DataMemory {
   private final int[] memory;
 
   /**
-   * The base address of the memory stack (0x0FFFFFFF).
+   * The base address of the memory stack (0xFFFFFFFF).
    */
-  private static final int BASE_ADDRESS = 0x0FFFFFFF;
+  private static final int BASE_ADDRESS = 0xFFFFFFFF;
 
   /**
    * Initializes the data memory with a default size of 128 words (512 bytes).
@@ -20,9 +20,15 @@ public class DataMemory {
   /**
    * Initializes the data memory with the specified size.
    *
-   * @param size The size of the memory in bytes. Must be a multiple of 4.
+   * @param size The size of the memory in bytes. Must be a multiple of 4. Must not exceed 1 MB.
    */
   public DataMemory(int size) {
+    if(size % 4 != 0){
+      throw new IllegalArgumentException("Memory size must be a multiple of 4 bytes");
+    }
+    if(size > 1048576){
+      throw new IllegalArgumentException("Memory size must not exceed 1 MB");
+    }
     this.memory = new int[size / 4];
   }
 
@@ -84,7 +90,7 @@ public class DataMemory {
     state.append("Address     Byte 1   Byte 2   Byte 3   Byte 4   Decimal Value\n");
 
     for(int i = 0; i < memory.length; i++){
-      int address = 0x0FFFFFFF - (i * 4); // Memory address
+      int address = 0xFFFFFFFF - (i * 4); // Memory address
       int data = memory[i]; // Data stored in memory
 
       if(data != 0){ // Only non-empty addresses

@@ -15,8 +15,20 @@ public class InstructionMemory {
    * @throws IllegalArgumentException If the instruction list exceeds 128 lines (512 bytes).
    */
   public InstructionMemory(List<String> instructionList) {
-    if(instructionList.size() > 128){
-      throw new IllegalArgumentException("Instruction list exceeds 128 lines (512 bytes limit)");
+    this(instructionList, 128);
+  }
+
+  /**
+   * Constructs an InstructionMemory instance with the given list of binary instructions and size.
+   *
+   * @param instructionList A list of binary instructions to be stored.
+   * @param size The maximum size in bytes that can be stored in the memory.
+   *
+   * @throws IllegalArgumentException If the instruction list exceeds the specified size.
+   */
+  public InstructionMemory(List<String> instructionList, int size) {
+    if(instructionList.size() > size / 4){
+      throw new IllegalArgumentException("Instruction list exceeds " + size + " lines (" + (size * 4) + " bytes limit)");
     }
 
     instructions = new String[instructionList.size()];

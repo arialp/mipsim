@@ -183,11 +183,12 @@ public class Assembler {
           case "j":
           case "jal":{
             String label = parts[1];
-            Integer address = labelMap.get(label); // Label address
+            Integer address = labelMap.get(label); // Absolute label address
             if(address == null){
               System.err.println("Label not found: " + label);
             } else {
-              int targetAddress = address / 4;
+              // Convert to 26-bit word address (remove bottom 2 bits and top 4 bits)
+              int targetAddress = (address >> 2)&0x03FFFFFF;
               binaryCode.add(binaryInstruction + toBinary(targetAddress, 26));
             }
             break;
@@ -266,10 +267,10 @@ public class Assembler {
    * @return The binary representation of the value as a string.
    */
   private static String toBinary(int value, int bits) {
-    String binary = Integer.toBinaryString(value&((1 << bits) - 1));
+    StringBuilder binary = new StringBuilder(Integer.toBinaryString(value&((1 << bits) - 1)));
     while(binary.length() < bits){
-      binary = "0" + binary;
+      binary.insert(0, "0");
     }
-    return binary;
+    return binary.toString();
   }
 }

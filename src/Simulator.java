@@ -26,9 +26,9 @@ public class Simulator {
     this.instructionMemory = new InstructionMemory(binaryInstructions);
     this.dataMemory = new DataMemory();
     this.registerFile = new RegisterFile();
-    this.programCounter = 0x00400000;
+    this.programCounter = 0x00400000; // Program counter starts at 0x00400000
 
-    registerFile.write(29, 0x0FFFFFFF); // stack pointer default value
+    registerFile.write(29, 0xFFFFFFFF); // Stack starts at 0xFFFFFFFF
     isFinished = false;
   }
 
@@ -44,6 +44,7 @@ public class Simulator {
     }
 
     isBranchOrJump = false;
+
     String instruction = instructionMemory.getInstruction(programCounter);
     decodeAndExecute(instruction);
 
@@ -257,9 +258,10 @@ public class Simulator {
    */
   private void executeJ(String instruction) {
     int targetAddress = Integer.parseInt(instruction.substring(6), 2);
-    // To extend targetAddress from 26 bits to 32 bits,
-    // shift left by 2, now 28 bits
-    // PC[31:28] -> targetAddress, now 32 bits
+
+    // Extend targetAddress to 32 bits:
+    // 1. Shift left by 2 to make it 28 bits (restore word alignment)
+    // 2. Combine with PC[31:28] (current top 4 bits of PC)
     programCounter = (programCounter&0xF0000000)|targetAddress << 2;
     isBranchOrJump = true;
   }
@@ -274,9 +276,10 @@ public class Simulator {
   private void executeJal(String instruction) {
     int targetAddress = Integer.parseInt(instruction.substring(6), 2);
     registerFile.write(31, programCounter + 4); // Return address in $ra
-    // To extend targetAddress from 26 bits to 32 bits,
-    // shift left by 2, now 28 bits
-    // PC[31:28] -> targetAddress, now 32 bits
+
+    // Extend targetAddress to 32 bits:
+    // 1. Shift left by 2 to make it 28 bits (restore word alignment)
+    // 2. Combine with PC[31:28] (current top 4 bits of PC)
     programCounter = (programCounter&0xF0000000)|targetAddress << 2;
     isBranchOrJump = true;
   }
