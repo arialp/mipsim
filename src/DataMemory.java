@@ -43,6 +43,10 @@ public class DataMemory {
    */
   public int load(int address) {
     int index = convertAddressToIndex(address);
+    if(index < 0 || index >= memory.length){
+      throw new IndexOutOfBoundsException(
+              "Invalid memory address: " + Integer.toHexString(address));
+    }
     return memory[index];
   }
 
@@ -56,6 +60,10 @@ public class DataMemory {
    */
   public void store(int address, int value) {
     int index = convertAddressToIndex(address);
+    if(index < 0 || index >= memory.length){
+      throw new IndexOutOfBoundsException(
+              "Invalid memory address: " + Integer.toHexString(address));
+    }
     memory[index] = value;
   }
 
@@ -65,49 +73,46 @@ public class DataMemory {
    * @param address The memory address to convert.
    *
    * @return The corresponding index in the memory array.
-   *
-   * @throws IndexOutOfBoundsException If the address is invalid or out of range.
    */
-  private int convertAddressToIndex(int address) {
-    int offset = (BASE_ADDRESS - address) / 4; // Stack grows downward
-    if(offset < 0 || offset >= memory.length){
-      throw new IndexOutOfBoundsException(
-              "Invalid memory address: " + Integer.toHexString(address));
-    }
-    return offset;
+  static private int convertAddressToIndex(int address) {
+    return (BASE_ADDRESS - address) / 4;
+  }
+
+  /**
+   * Converts an index in the memory array to a memory address.
+   *
+   * @param index The index in the memory array.
+   *
+   * @return The corresponding memory address.
+   */
+  static private int convertIndexToAddress(int index) {
+    return BASE_ADDRESS - (index * 4);
   }
 
   /**
    * Retrieves the current state of the memory, showing only non-empty addresses.
    *
-   * @return A formatted string showing the address, binary representation of each byte, and the
-   * decimal value for each non-empty memory address.
+   * @return A 2D array containing the address and its corresponding data value as a string.
    */
-  public String getMemoryState() {
-    StringBuilder state = new StringBuilder();
+  public String[][] getMemoryState() {
+    int count = 0;
 
-    // Header row
-    state.append("Address     Byte 1   Byte 2   Byte 3   Byte 4   Decimal Value\n");
-
-    for(int i = 0; i < memory.length; i++){
-      int address = 0xFFFFFFFF - (i * 4); // Memory address
-      int data = memory[i]; // Data stored in memory
-
-      if(data != 0){ // Only non-empty addresses
-        // Split 32-bit data into 8-bit parts
-        String[] dataBytes = new String[4];
-        for(int j = 0; j < 4; j++){
-          dataBytes[j] = String.format("%8s", Integer.toBinaryString((data >> (24 - j * 8))&0xFF))
-                               .replace(' ', '0'); // Format each byte in binary
-        }
-
-        // Append address, data bytes, and decimal value
-        state.append(String.format("0x%08X: %s %s %s %s %d\n", address, dataBytes[0], dataBytes[1],
-                                   dataBytes[2], dataBytes[3], data));
+    for(int value : memory){
+      if(value != 0){
+        count++;
       }
     }
 
-    return state.toString();
+    String[][] state = new String[count][2];
+
+    for(int i = 0; i < count; i++){
+      if(memory[i] != 0){
+        state[i][0] = String.format("0x%08X", convertIndexToAddress(i));
+        state[i][1] = String.valueOf(memory[i]);
+      }
+    }
+
+    return state;
   }
 
 }

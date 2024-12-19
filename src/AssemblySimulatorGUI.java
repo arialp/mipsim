@@ -262,7 +262,32 @@ public class AssemblySimulatorGUI {
    */
   private void updateDataMemory() {
     if(simulator != null){
-      dataMemoryOutput.setText(simulator.getMemoryState());
+      StringBuilder dataMemoryState = new StringBuilder();
+      String[][] dataMemory = simulator.getDataMemoryState();
+
+      // Add header
+      dataMemoryState.append("Address     Byte 1   Byte 2   Byte 3   Byte 4   Decimal Value\n");
+
+      // Format data memory content
+      for(String[] entry : dataMemory){
+        String address = entry[0];
+        int data = Integer.parseInt(entry[1]);
+
+        // Split 32-bit data into 8-bit parts
+        String[] dataBytes = new String[4];
+        for(int j = 0; j < 4; j++){
+          dataBytes[j] = String.format("%8s", Integer.toBinaryString((data >> (24 - j * 8))&0xFF))
+                               .replace(' ', '0');
+        }
+
+        // Append formatted address, data bytes, and decimal value
+        dataMemoryState.append(
+                String.format("%s: %s %s %s %s %d\n", address, dataBytes[0], dataBytes[1],
+                              dataBytes[2], dataBytes[3], data));
+      }
+
+      // Update GUI
+      dataMemoryOutput.setText(dataMemoryState.toString());
       dataMemoryOutput.setCaretPosition(0);
     }
   }

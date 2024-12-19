@@ -10,6 +10,7 @@ public class Simulator {
   private DataMemory dataMemory;
   private RegisterFile registerFile;
   private int programCounter;
+  private int stackPointerDefaultValue = 0xFFFFFFFF;
   private boolean isBranchOrJump;
   private boolean isFinished;
 
@@ -28,7 +29,7 @@ public class Simulator {
     this.registerFile = new RegisterFile();
     this.programCounter = 0x00400000; // Program counter starts at 0x00400000
 
-    registerFile.write(29, 0xFFFFFFFF); // Stack starts at 0xFFFFFFFF
+    registerFile.write(29, stackPointerDefaultValue); // Stack starts at 0xFFFFFFFF
     isFinished = false;
   }
 
@@ -293,7 +294,7 @@ public class Simulator {
     this.programCounter = 0x00400000;
     this.dataMemory = new DataMemory();
     this.registerFile = new RegisterFile();
-    registerFile.write(29, 0x0FFFFFFF); // stack pointer default value
+    registerFile.write(29, stackPointerDefaultValue); // stack pointer default value
     isFinished = false;
   }
 
@@ -302,7 +303,7 @@ public class Simulator {
     return registerFile.getRegisterState();
   }
 
-  public String getMemoryState() {
+  public String[][] getDataMemoryState() {
     return dataMemory.getMemoryState();
   }
 
