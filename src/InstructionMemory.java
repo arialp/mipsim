@@ -7,6 +7,8 @@ import java.util.List;
 public class InstructionMemory {
   private final String[] instructions;
 
+  static private final int BASE_ADDRESS = 0x00400000;
+
   /**
    * Constructs an InstructionMemory instance with the given list of binary instructions.
    *
@@ -64,8 +66,7 @@ public class InstructionMemory {
    * @return The corresponding index in the instruction array.
    */
   static private int convertAddressToIndex(int address) {
-    int baseAddress = 0x00400000;
-    return (address - baseAddress) / 4;
+    return (address - BASE_ADDRESS) / 4;
   }
 
   /**
@@ -76,8 +77,7 @@ public class InstructionMemory {
    * @return The corresponding memory address.
    */
   static private int convertIndexToAddress(int index) {
-    int baseAddress = 0x00400000;
-    return baseAddress + (index * 4);
+    return BASE_ADDRESS + (index * 4);
   }
 
   /**

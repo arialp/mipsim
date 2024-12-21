@@ -1,3 +1,6 @@
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Represents the data memory of a MIPS simulator. Provides methods to load and store 32-bit values,
  * as well as retrieve the memory's current state.
@@ -5,10 +8,7 @@
 public class DataMemory {
   private final int[] memory;
 
-  /**
-   * The base address of the memory stack (0xFFFFFFFF).
-   */
-  private static final int BASE_ADDRESS = 0xFFFFFFFF;
+  static private final int BASE_ADDRESS = 0xFFFFFFFF;
 
   /**
    * Initializes the data memory with a default size of 128 words (512 bytes).
@@ -95,24 +95,17 @@ public class DataMemory {
    * @return A 2D array containing the address and its corresponding data value as a string.
    */
   public String[][] getMemoryState() {
-    int count = 0;
+    List<String[]> stateList = new ArrayList<>();
 
-    for(int value : memory){
-      if(value != 0){
-        count++;
-      }
-    }
-
-    String[][] state = new String[count][2];
-
-    for(int i = 0; i < count; i++){
+    for(int i = 0; i < memory.length; i++){
       if(memory[i] != 0){
-        state[i][0] = String.format("0x%08X", convertIndexToAddress(i));
-        state[i][1] = String.valueOf(memory[i]);
+        String address = String.format("0x%08X", convertIndexToAddress(i));
+        String value = String.valueOf(memory[i]);
+        stateList.add(new String[]{address, value});
       }
     }
 
-    return state;
+    return stateList.toArray(new String[0][0]);
   }
 
 }

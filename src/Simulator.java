@@ -10,9 +10,10 @@ public class Simulator {
   private DataMemory dataMemory;
   private RegisterFile registerFile;
   private int programCounter;
-  private int stackPointerDefaultValue = 0xFFFFFFFF;
   private boolean isBranchOrJump;
   private boolean isFinished;
+
+  private final int stackPointerDefaultValue = 0xFFFFFFFF;
 
   /**
    * Constructor: Assembles the given MIPS assembly code, Loads assembled instructions into
