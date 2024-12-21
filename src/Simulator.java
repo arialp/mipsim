@@ -12,7 +12,6 @@ public class Simulator {
   private int programCounter;
   private boolean isBranchOrJump;
   private boolean isFinished;
-
   private final int stackPointerDefaultValue = 0xFFFFFFFF;
 
   /**
@@ -29,9 +28,7 @@ public class Simulator {
     this.dataMemory = new DataMemory();
     this.registerFile = new RegisterFile();
     this.programCounter = 0x00400000; // Program counter starts at 0x00400000
-
     registerFile.write(29, stackPointerDefaultValue); // Stack starts at 0xFFFFFFFF
-    isFinished = false;
   }
 
   /**
@@ -39,13 +36,14 @@ public class Simulator {
    * jump instruction modifies it.
    */
   public void step() {
+    isBranchOrJump = false;
+    isFinished = false;
+
     if(programCounter >= 0x00400000 + instructionMemory.size() * 4){
       System.out.println("Program Finished.");
       isFinished = true;
       return;
     }
-
-    isBranchOrJump = false;
 
     String instruction = instructionMemory.getInstruction(programCounter);
     decodeAndExecute(instruction);
@@ -67,28 +65,28 @@ public class Simulator {
 
     switch(opcode){
       case "000000": // R-Type instructions (add, sub, and, or, slt, sll, srl) and jr
-        executeRFormat(instruction);
+        execR(instruction);
         break;
       case "001000": // addi
-        executeAddi(instruction);
+        addi(instruction);
         break;
       case "100011": // lw
-        executeLw(instruction);
+        lw(instruction);
         break;
       case "101011": // sw
-        executeSw(instruction);
+        sw(instruction);
         break;
       case "000100": // beq
-        executeBeq(instruction);
+        beq(instruction);
         break;
       case "000101": // bne
-        executeBne(instruction);
+        bne(instruction);
         break;
       case "000010": // j
-        executeJ(instruction);
+        jump(instruction);
         break;
       case "000011": // jal
-        executeJal(instruction);
+        jal(instruction);
         break;
       default:
         System.out.println("Unsupported Opcode: " + opcode);
@@ -102,7 +100,7 @@ public class Simulator {
    *
    * @param instruction The binary string representation of the instruction to be executed
    */
-  private void executeRFormat(String instruction) {
+  private void execR(String instruction) {
     int rs = Integer.parseInt(instruction.substring(6, 11), 2); // Source register
     int rt = Integer.parseInt(instruction.substring(11, 16), 2); // Target register
     int rd = Integer.parseInt(instruction.substring(16, 21), 2); // Destination register
@@ -147,7 +145,7 @@ public class Simulator {
    *
    * @param instruction The binary string representation of the instruction to be executed
    */
-  private void executeAddi(String instruction) {
+  private void addi(String instruction) {
     int rs = Integer.parseInt(instruction.substring(6, 11), 2);
     int rt = Integer.parseInt(instruction.substring(11, 16), 2);
     int immediate = Integer.parseInt(instruction.substring(16), 2);
@@ -163,7 +161,7 @@ public class Simulator {
    *
    * @param instruction The binary string representation of the instruction to be executed
    */
-  private void executeLw(String instruction) {
+  private void lw(String instruction) {
     int rs = Integer.parseInt(instruction.substring(6, 11), 2);
     int rt = Integer.parseInt(instruction.substring(11, 16), 2);
     int offset = Integer.parseInt(instruction.substring(16), 2);
@@ -187,7 +185,7 @@ public class Simulator {
    *
    * @param instruction The binary string representation of the instruction to be executed
    */
-  private void executeSw(String instruction) {
+  private void sw(String instruction) {
     int rs = Integer.parseInt(instruction.substring(6, 11), 2);
     int rt = Integer.parseInt(instruction.substring(11, 16), 2);
     int offset = Integer.parseInt(instruction.substring(16), 2);
@@ -212,7 +210,7 @@ public class Simulator {
    *
    * @param instruction The binary string representation of the instruction to be executed
    */
-  private void executeBeq(String instruction) {
+  private void beq(String instruction) {
     int rs = Integer.parseInt(instruction.substring(6, 11), 2);
     int rt = Integer.parseInt(instruction.substring(11, 16), 2);
     int offset = Integer.parseInt(instruction.substring(16), 2);
@@ -236,7 +234,7 @@ public class Simulator {
    *
    * @param instruction The binary string representation of the instruction to be executed
    */
-  private void executeBne(String instruction) {
+  private void bne(String instruction) {
     int rs = Integer.parseInt(instruction.substring(6, 11), 2);
     int rt = Integer.parseInt(instruction.substring(11, 16), 2);
     int offset = Integer.parseInt(instruction.substring(16), 2);
@@ -258,7 +256,7 @@ public class Simulator {
    *
    * @param instruction The binary string representation of the instruction to be executed
    */
-  private void executeJ(String instruction) {
+  private void jump(String instruction) {
     int targetAddress = Integer.parseInt(instruction.substring(6), 2);
 
     // Extend targetAddress to 32 bits:
@@ -275,7 +273,7 @@ public class Simulator {
    *
    * @param instruction The binary string representation of the instruction to be executed
    */
-  private void executeJal(String instruction) {
+  private void jal(String instruction) {
     int targetAddress = Integer.parseInt(instruction.substring(6), 2);
     registerFile.write(31, programCounter + 4); // Return address in $ra
 
@@ -292,11 +290,11 @@ public class Simulator {
    * finished.
    */
   public void reset() {
+    this.isFinished = false;
     this.programCounter = 0x00400000;
     this.dataMemory = new DataMemory();
     this.registerFile = new RegisterFile();
     registerFile.write(29, stackPointerDefaultValue); // stack pointer default value
-    isFinished = false;
   }
 
   // Getters
