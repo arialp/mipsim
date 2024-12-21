@@ -10,18 +10,8 @@ import java.awt.event.ActionListener;
 
 public class AssemblySimulatorGUI {
   private static final Font TEXT_FONT = new Font("Cascadia Mono", Font.PLAIN, 16);
-  private final JTextArea assemblyInput;
-  private final JTextArea machineCodeOutput;
-  private final JTextArea registerFileLeft;
-  private final JTextArea registerFileRight;
-  private final JTextArea instructionMemoryOutput;
-  private final JTextArea dataMemoryOutput;
-  private final JButton hexButton;
-  private final JButton binaryButton;
-  private final JButton assembleButton;
-  private final JButton stepButton;
-  private final JButton runButton;
-  private final JButton resetButton;
+  private final JTextArea assemblyInput, machineCodeOutput, registerFileLeft, registerFileRight,
+          instructionMemoryOutput, dataMemoryOutput;
   private Simulator simulator;
   private boolean displayInHex = false;
 
@@ -86,8 +76,8 @@ public class AssemblySimulatorGUI {
 
     JPanel buttonPanel = new JPanel(new GridLayout(1, 2));
     buttonPanel.setBackground(Color.BLACK);
-    hexButton = createButton("HEX");
-    binaryButton = createButton("BINARY");
+    JButton hexButton = createButton("HEX");
+    JButton binaryButton = createButton("BINARY");
     buttonPanel.add(hexButton);
     buttonPanel.add(binaryButton);
 
@@ -98,7 +88,7 @@ public class AssemblySimulatorGUI {
     registerFilePanel.setBackground(Color.BLACK);
     registerFilePanel.setBorder(
             BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.GRAY),
-                                             "Register File", 2, 2, TEXT_FONT, Color.WHITE));
+                                             "REGISTER FILE", 2, 2, TEXT_FONT, Color.WHITE));
 
     registerFileLeft = createTextArea();
     registerFileLeft.setEditable(false);
@@ -127,10 +117,10 @@ public class AssemblySimulatorGUI {
     JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
     bottomPanel.setBackground(Color.BLACK);
 
-    assembleButton = createButton("Assemble");
-    runButton = createButton("Run");
-    stepButton = createButton("Next Step");
-    resetButton = createButton("Reset");
+    JButton assembleButton = createButton("Assemble");
+    JButton runButton = createButton("Run");
+    JButton stepButton = createButton("Next Step");
+    JButton resetButton = createButton("Reset");
 
     bottomPanel.add(assembleButton);
     bottomPanel.add(runButton);
@@ -237,9 +227,10 @@ public class AssemblySimulatorGUI {
 
       for(String[] addresses : instructionMemory){
         // Split 32-bit instruction into 8-bit segments
-        String[] instructionParts = {addresses[1].substring(0, 8), addresses[1].substring(8, 16),
-                                     addresses[1].substring(16, 24),
-                                     addresses[1].substring(24, 32)};
+        String[]
+                instructionParts =
+                {addresses[1].substring(0, 8), addresses[1].substring(8, 16),
+                 addresses[1].substring(16, 24), addresses[1].substring(24, 32)};
 
         // Append address and instruction parts
         String address = addresses[0];
@@ -276,8 +267,9 @@ public class AssemblySimulatorGUI {
         // Split 32-bit data into 8-bit parts
         String[] dataBytes = new String[4];
         for(int j = 0; j < 4; j++){
-          dataBytes[j] = String.format("%8s", Integer.toBinaryString((data >> (24 - j * 8))&0xFF))
-                               .replace(' ', '0');
+          dataBytes[j] =
+                  String.format("%8s", Integer.toBinaryString((data >> (24 - j * 8))&0xFF))
+                        .replace(' ', '0');
         }
 
         // Append formatted address, data bytes, and decimal value
@@ -302,11 +294,11 @@ public class AssemblySimulatorGUI {
       StringBuilder rightOutput = new StringBuilder();
 
       for(int i = 0; i < 16; i++){
-        leftOutput.append(registerState[i][0]).append("\t").append(registerState[i][1])
+        leftOutput.append(registerState[i][0]).append(":\t").append(registerState[i][1])
                   .append("\n");
       }
       for(int i = 16; i < 32; i++){
-        rightOutput.append(registerState[i][0]).append("\t").append(registerState[i][1])
+        rightOutput.append(registerState[i][0]).append(":\t").append(registerState[i][1])
                    .append("\n");
       }
 
@@ -338,7 +330,7 @@ public class AssemblySimulatorGUI {
   private class StepListener implements ActionListener {
     public void actionPerformed(ActionEvent e) {
       if(simulator != null){
-        simulator.executeNextStep();
+        simulator.step();
         updateInstructionMemory();
         updateRegisterFile();
         updateDataMemory();
@@ -353,7 +345,7 @@ public class AssemblySimulatorGUI {
     public void actionPerformed(ActionEvent e) {
       if(simulator != null){
         while(!simulator.isFinished()){
-          simulator.executeNextStep();
+          simulator.step();
           updateInstructionMemory();
           updateRegisterFile();
           updateDataMemory();

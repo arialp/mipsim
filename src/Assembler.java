@@ -8,6 +8,11 @@ import java.util.List;
 import java.util.Map;
 
 public class Assembler {
+  private static final String[] registerNames = {"$zero", "$at", "$v0", "$v1", "$a0", "$a1", "$a2",
+                                                 "$a3", "$t0", "$t1", "$t2", "$t3", "$t4", "$t5",
+                                                 "$t6", "$t7", "$s0", "$s1", "$s2", "$s3", "$s4",
+                                                 "$s5", "$s6", "$s7", "$t8", "$t9", "$k0", "$k1",
+                                                 "$gp", "$sp", "$fp", "$ra"};
 
   /**
    * Map of labels and their corresponding memory addresses.
@@ -221,11 +226,6 @@ public class Assembler {
    * @return The binary representation of the register.
    */
   private static String registerToBinary(String register) {
-    String[] registerNames = {"$zero", "$at", "$v0", "$v1", "$a0", "$a1", "$a2", "$a3", "$t0",
-                              "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$s0", "$s1", "$s2",
-                              "$s3", "$s4", "$s5", "$s6", "$s7", "$t8", "$t9", "$k0", "$k1", "$gp",
-                              "$sp", "$fp", "$ra"};
-
     Map<String, String> registerMap = new HashMap<>();
     for(int i = 0; i < registerNames.length; i++){
       String binary = String.format("%5s", Integer.toBinaryString(i)).replace(' ', '0');

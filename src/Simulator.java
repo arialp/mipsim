@@ -38,7 +38,7 @@ public class Simulator {
    * Executes the next instruction in the program. Updates the program counter unless a branch or
    * jump instruction modifies it.
    */
-  public void executeNextStep() {
+  public void step() {
     if(programCounter >= 0x00400000 + instructionMemory.size() * 4){
       System.out.println("Program Finished.");
       isFinished = true;

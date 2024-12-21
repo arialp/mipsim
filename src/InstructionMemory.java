@@ -23,14 +23,21 @@ public class InstructionMemory {
    * Constructs an InstructionMemory instance with the given list of binary instructions and size.
    *
    * @param instructionList A list of binary instructions to be stored.
-   * @param size The maximum size in bytes that can be stored in the memory.
+   * @param size The maximum size in bytes that can be stored in the memory. Must be a multiple of
+   * 4. Must not exceed 1 MB.
    *
-   * @throws IllegalArgumentException If the instruction list exceeds the specified size.
+   * @throws IllegalArgumentException If the instruction list exceeds the specified size, the size is not a multiple of 4, or the size exceeds 1 MB.
    */
   public InstructionMemory(List<String> instructionList, int size) {
     if(instructionList.size() > size / 4){
       throw new IllegalArgumentException(
               "Instruction list exceeds " + size + " lines (" + (size * 4) + " bytes limit)");
+    }
+    if(size > 1048576){
+      throw new IllegalArgumentException("Memory size must not exceed 1 MB");
+    }
+    if(size % 4 != 0){
+      throw new IllegalArgumentException("Memory size must be a multiple of 4 bytes");
     }
 
     instructions = new String[instructionList.size()];
