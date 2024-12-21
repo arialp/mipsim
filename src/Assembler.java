@@ -105,7 +105,7 @@ public class Assembler {
    *
    * @return A list of binary machine code instructions.
    */
-  public static List<String> convertToBinary(List<String> assemblyLines) {
+  private static List<String> convertToBinary(List<String> assemblyLines) {
     List<String> binaryCode = new ArrayList<>();
     int currentLine = 0;
 

@@ -5,9 +5,8 @@ import java.util.List;
  * instructions and provides methods to access them by address.
  */
 public class InstructionMemory {
+  private static final int BASE_ADDRESS = 0x00400000;
   private final String[] instructions;
-
-  static private final int BASE_ADDRESS = 0x00400000;
 
   /**
    * Constructs an InstructionMemory instance with the given list of binary instructions.
@@ -30,7 +29,8 @@ public class InstructionMemory {
    */
   public InstructionMemory(List<String> instructionList, int size) {
     if(instructionList.size() > size / 4){
-      throw new IllegalArgumentException("Instruction list exceeds " + size + " lines (" + (size * 4) + " bytes limit)");
+      throw new IllegalArgumentException(
+              "Instruction list exceeds " + size + " lines (" + (size * 4) + " bytes limit)");
     }
 
     instructions = new String[instructionList.size()];
@@ -65,7 +65,7 @@ public class InstructionMemory {
    *
    * @return The corresponding index in the instruction array.
    */
-  static private int convertAddressToIndex(int address) {
+  private static int convertAddressToIndex(int address) {
     return (address - BASE_ADDRESS) / 4;
   }
 
@@ -76,7 +76,7 @@ public class InstructionMemory {
    *
    * @return The corresponding memory address.
    */
-  static private int convertIndexToAddress(int index) {
+  private static int convertIndexToAddress(int index) {
     return BASE_ADDRESS + (index * 4);
   }
 

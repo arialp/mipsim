@@ -6,9 +6,8 @@ import java.util.List;
  * as well as retrieve the memory's current state.
  */
 public class DataMemory {
+  private static final int BASE_ADDRESS = 0xFFFFFFFF;
   private final int[] memory;
-
-  static private final int BASE_ADDRESS = 0xFFFFFFFF;
 
   /**
    * Initializes the data memory with a default size of 128 words (512 bytes).
@@ -74,7 +73,7 @@ public class DataMemory {
    *
    * @return The corresponding index in the memory array.
    */
-  static private int convertAddressToIndex(int address) {
+  private static int convertAddressToIndex(int address) {
     return (BASE_ADDRESS - address) / 4;
   }
 
@@ -85,7 +84,7 @@ public class DataMemory {
    *
    * @return The corresponding memory address.
    */
-  static private int convertIndexToAddress(int index) {
+  private static int convertIndexToAddress(int index) {
     return BASE_ADDRESS - (index * 4);
   }
 
