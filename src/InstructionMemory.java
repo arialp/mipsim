@@ -56,7 +56,7 @@ public class InstructionMemory {
    *
    * @throws IndexOutOfBoundsException If the address is out of bounds.
    */
-  public String getInstruction(int address) {
+  public String load(int address) {
     int index = convertAddressToIndex(address);
     if(index < 0 || index >= instructions.length){
       throw new IndexOutOfBoundsException(

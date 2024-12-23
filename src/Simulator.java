@@ -45,7 +45,7 @@ public class Simulator {
       return;
     }
 
-    String instruction = instructionMemory.getInstruction(programCounter);
+    String instruction = instructionMemory.load(programCounter);
     decodeAndExecute(instruction);
 
     // PC increment is handled by branch and jump instructions
@@ -61,7 +61,7 @@ public class Simulator {
    * @param instruction The binary string representation of the MIPS instruction to be executed
    */
   private void decodeAndExecute(String instruction) {
-    String opcode = instruction.substring(0, 6); // 31-26 bits are opcode
+    String opcode = instruction.substring(0, 6);
 
     switch(opcode){
       case "000000": // R-Type instructions (add, sub, and, or, slt, sll, srl) and jr
@@ -315,7 +315,7 @@ public class Simulator {
   }
 
   public String getInstruction(int address) {
-    return instructionMemory.getInstruction(address);
+    return instructionMemory.load(address);
   }
 
   public boolean isFinished() {

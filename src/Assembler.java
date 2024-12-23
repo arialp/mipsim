@@ -147,7 +147,6 @@ public class Assembler {
             binaryCode.add(binaryInstruction + "00000" + rt + rd + sa + funct);
             break;
           }
-
           // I-format instructions
           case "addi":{
             String rt = registerToBinary(parts[1]);
@@ -183,7 +182,6 @@ public class Assembler {
             }
             break;
           }
-
           // J-format instructions
           case "j":
           case "jal":{
@@ -192,7 +190,7 @@ public class Assembler {
             if(address == null){
               System.err.println("Label not found: " + label);
             } else {
-              // Convert to 26-bit word address (remove bottom 2 bits and top 4 bits)
+              // Compress 32 bits into 26 bits
               int targetAddress = (address >> 2)&0x03FFFFFF;
               binaryCode.add(binaryInstruction + toBinary(targetAddress, 26));
             }
@@ -204,7 +202,6 @@ public class Assembler {
             binaryCode.add("000000" + rs + "00000" + "00000" + "00000" + funct);
             break;
           }
-
           default:{
             System.err.println("Unsupported instruction: " + instruction);
           }

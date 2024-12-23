@@ -41,12 +41,14 @@ public class RegisterFile {
    *
    * @param value The value to store in the specified register.
    *
-   * @throws IndexOutOfBoundsException If the register number is out of range (not between 0 and
-   * 31).
+   * @throws IndexOutOfBoundsException If the register number is either out of range or is 0.
    */
   public void write(int registerNumber, int value) {
     if(registerNumber < 0 || registerNumber >= registers.length){
       throw new IndexOutOfBoundsException("Invalid register number: " + registerNumber);
+    }
+    if(registerNumber == 0) {
+      throw new IndexOutOfBoundsException("Register $zero is read-only");
     }
     registers[registerNumber] = value;
   }
