@@ -6,7 +6,9 @@ To simulate a subset of the MIPS 32-bit architecture, enabling users to write, a
 ## Design Methodology
 The design and implementation of mipsim were carried out in several systematic phases:
 
+
 ### 1. Assembler Implementation
+
 To convert textual MIPS assembly code into binary machine code:
 
 - Register Names and Instructions Mapping:
@@ -18,8 +20,9 @@ To convert textual MIPS assembly code into binary machine code:
     - Handle comments and clean assembly lines.
     - Parse labels and associate them with memory addresses.
     - Convert instructions to binary, taking into account the opcode, register mappings, and immediate values.
-
+---
 ### 2. Instruction and Data Memory
+
 - Memory Design:
   - Instruction and data memory are designed to follow MIPS architecture:
     - Addresses are 4-byte aligned.
@@ -30,13 +33,15 @@ To convert textual MIPS assembly code into binary machine code:
   - Data Memory:
     - Stores 32-bit values at specific memory locations.
     - Allows for both read (load) and write (store) operations.
-   
+---
 ### 3. Register File
+
 - Implements the 32 general-purpose registers of MIPS architecture.
 - $zero register is read-only and always contains the value 0.
 - Special registers include $sp (stack pointer) and $ra (return address).
 - Provides methods to read and write register values and retrieve the current register states.
 
+---
 ### 4. Graphical User Interface (GUI)
 - A preliminary GUI was created to test and verify the assembler:
   - Users can input assembly code, view machine code, and inspect memory and register states.
@@ -47,6 +52,7 @@ To convert textual MIPS assembly code into binary machine code:
     - Text areas for assembly input, machine code output, instruction memory, data memory, and register files.
     - Highlight the program counter (PC) during simulation.
 
+---
 ### 5. Simulator
 The core of mipsim, responsible for executing machine code:
 
@@ -66,9 +72,68 @@ The core of mipsim, responsible for executing machine code:
 - Reset:
   - Resets the program counter, register file, and memory to their initial states.
 
-### 6. Testing and Debugging
-- Assembler functionality was tested using the GUI before integrating with the simulator.
-- Debugging was aided by console outputs during invalid opcode or memory accesses.
+---
+### Supported Instructions
+mipsim supports a subset of MIPS instructions across R, I, and J formats. Below are the supported instructions:
+
+|Instruction|Type|Opcode/Function|Format|
+|---|---|---|---|
+|	add	|	R	| 100000  | add rd, rs, rt
+|	sub	|	R	| 100010  | sub rd, rs, rt
+|	and	|	R	| 100100  | and rd, rs, rt
+|	or	|	R	| 100101  | or rd, rs, rt
+|	slt	|	R	| 101010  | slt rd, rs, rt
+|	sll	|	R	| 000000  | sll rd, rt, sa
+|	srl	|	R	| 000010  | srl rd, rt, sa
+|	addi|	I	| 001000  | addi rt, rs, imm
+|	lw	|	I	| 100011  | lw rt, offset(rs)
+|	sw	|	I	| 101011  | sw rt, offset(rs)
+|	beq	|	I	| 000100  | beq rs, rt, label
+|	bne	|	I	| 000101  | bne rs, rt, label
+|	j		|	J	| 000010  | j label
+|	jal	|	J	| 000011  | jal label
+|	jr	|	J	| 001000  | jr rs
+
+### Build
+To compile and build the project, follow these steps:
+
+1. Make sure JDK 8 or higher is installed:
+
+2. Build:
+
+	- Use the following script to compile the project:
+
+```
+javac -d bin -sourcepath src src/*.java
+```
+
+### Run
+After compiling the project, run the simulator using the following command:
+
+```
+java -cp bin AssemblySimulatorGUI
+```
+
+#### Usage:
+
+The GUI will launch, allowing you to:
+- Input MIPS assembly code.
+- Assemble the code into machine code.
+- Execute the code step-by-step or run the entire program.
+- View the states of instruction memory, data memory, and registers.
+
+#### Example Input:
+
+Paste the following assembly code into the input area for a test run:
+
+```
+addi $t0, $zero, 5
+addi $t1, $zero, 10
+add $t2, $t0, $t1
+sw $t2, 0($sp)
+```
+
+Click "Assemble" to generate machine code, then use the "Run" or "Next Step" buttons to execute the program.
 
 ### Features
 - Assembly Code Support:
