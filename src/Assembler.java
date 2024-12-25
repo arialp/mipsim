@@ -142,6 +142,12 @@ public class Assembler {
             String rd = registerToBinary(parts[1]);
             String rt = registerToBinary(parts[2]);
             int shiftAmount = Integer.parseInt(parts[3]);
+
+            if(shiftAmount > 31){
+              System.err.println("Shift amount must be less than 32: " + line);
+              break;
+            }
+
             String sa = toBinary(shiftAmount, 5);
             String funct = functMap.get(instruction);
             binaryCode.add(binaryInstruction + "00000" + rt + rd + sa + funct);
@@ -152,6 +158,12 @@ public class Assembler {
             String rt = registerToBinary(parts[1]);
             String rs = registerToBinary(parts[2]);
             int immediate = Integer.parseInt(parts[3]);
+
+            if(immediate < -32768 || immediate > 32767){
+              System.err.println("Immediate value out of range: " + line);
+              break;
+            }
+
             binaryCode.add(binaryInstruction + rs + rt + toBinary(immediate, 16));
             break;
           }
@@ -161,6 +173,12 @@ public class Assembler {
             String offsetAndRs = parts[2];
             String[] offsetParts = offsetAndRs.split("[()]");
             int offset = Integer.parseInt(offsetParts[0]);
+
+            if(offset < -32768 || offset > 32767){
+              System.err.println("Offset value out of range: " + line);
+              break;
+            }
+
             String rs = registerToBinary(offsetParts[1]);
             binaryCode.add(binaryInstruction + rs + rt + toBinary(offset, 16));
             break;

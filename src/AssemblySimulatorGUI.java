@@ -19,6 +19,7 @@ public class AssemblySimulatorGUI {
           instructionMemoryOutput, dataMemoryOutput;
   private Simulator simulator;
   private boolean displayInHex = false;
+  private final JSpinner clockRateSpinner;
 
   /**
    * The main entry point for launching the GUI.
@@ -53,14 +54,14 @@ public class AssemblySimulatorGUI {
     memoryPanelConstraints.gridx = 0;
     memoryPanelConstraints.gridy = 1;
     memoryPanelConstraints.weightx = 1;
-    memoryPanelConstraints.weighty = 0.5;
+    memoryPanelConstraints.weighty = 0.495;
     memoryPanelConstraints.fill = GridBagConstraints.BOTH;
 
     GridBagConstraints bottomPanelConstraints = new GridBagConstraints();
     bottomPanelConstraints.gridx = 0;
     bottomPanelConstraints.gridy = 2;
     bottomPanelConstraints.weightx = 1;
-    bottomPanelConstraints.weighty = 0.02;
+    bottomPanelConstraints.weighty = 0.005;
     bottomPanelConstraints.fill = GridBagConstraints.BOTH;
 
     JPanel topPanel = new JPanel(new GridLayout(1, 3));
@@ -79,6 +80,7 @@ public class AssemblySimulatorGUI {
 
     machineCodeOutput = createTextArea();
     machineCodeOutput.setEditable(false);
+
     machineCodePanel.add(createStyledScrollPane(machineCodeOutput), BorderLayout.CENTER);
 
     // Machine code display options
@@ -134,11 +136,21 @@ public class AssemblySimulatorGUI {
     JButton stepButton = createButton("Next Step");
     JButton resetButton = createButton("Reset");
 
+    JLabel clockRateLabel = new JLabel("Clock Rate (ms):");
+    clockRateLabel.setForeground(Color.WHITE);
+    clockRateLabel.setFont(TEXT_FONT);
+
+    clockRateSpinner = new JSpinner(new SpinnerNumberModel(1, 1, Integer.MAX_VALUE, 1));
+    clockRateSpinner.setPreferredSize(new Dimension(60, 30));
+    clockRateSpinner.setFont(TEXT_FONT);
+
     bottomPanel.add(loadFileButton);
     bottomPanel.add(assembleButton);
     bottomPanel.add(runButton);
     bottomPanel.add(stepButton);
     bottomPanel.add(resetButton);
+    bottomPanel.add(clockRateLabel);
+    bottomPanel.add(clockRateSpinner);
 
     mainPanel.add(bottomPanel, bottomPanelConstraints);
     frame.add(mainPanel);
@@ -228,11 +240,13 @@ public class AssemblySimulatorGUI {
     displayInHex = toHex;
     if(simulator != null){
       StringBuilder output = new StringBuilder();
+      int lineNumber = 1; // Satır numaralarını başlat
       for(int i = 0; i < simulator.getInstructionMemorySize() * 4; i += 4){
         String instruction = simulator.getInstruction(i + 0x00400000);
+        output.append(String.format("%-4d | ", lineNumber++)); // Satır numarasını ekle
         output.append(toHex ? toHexadecimal(instruction) : instruction).append("\n");
       }
-      machineCodeOutput.setText(String.valueOf(output));
+      machineCodeOutput.setText(output.toString());
       machineCodeOutput.setCaretPosition(0);
     }
   }
@@ -464,22 +478,62 @@ public class AssemblySimulatorGUI {
         updateInstructionMemory();
         updateRegisterFile();
         updateDataMemory();
+        if(simulator.isFinished()){
+          JOptionPane.showMessageDialog(null, "Program Finished", "Finished",
+                                        JOptionPane.INFORMATION_MESSAGE);
+        }
       }
     }
   }
 
   /**
-   * Event listener for the Run button. Executes the program until completion and updates displays.
+   * Event listener for the Run button. Toggles between running and stopping the simulation.
    */
   private class RunListener implements ActionListener {
+    private SwingWorker<Void, Void> worker;
+    private boolean running = false;
+
     public void actionPerformed(ActionEvent e) {
-      if(simulator != null){
-        while(!simulator.isFinished()){
-          simulator.step();
-          updateInstructionMemory();
-          updateRegisterFile();
-          updateDataMemory();
-        }
+      JButton sourceButton = (JButton) e.getSource();
+
+      if(!running){
+        running = true;
+        sourceButton.setText("Stop");
+
+        worker = new SwingWorker<>() {
+          @Override
+          protected Void doInBackground() throws Exception {
+            while(!simulator.isFinished() && running){
+              simulator.step();
+              SwingUtilities.invokeLater(()->{
+                updateInstructionMemory();
+                updateRegisterFile();
+                updateDataMemory();
+              });
+              int clockRate = (int) clockRateSpinner.getValue();
+              Thread.sleep(clockRate);
+            }
+            return null;
+          }
+
+          @Override
+          protected void done() {
+            if(!running) return;
+            SwingUtilities.invokeLater(()->{
+              JOptionPane.showMessageDialog(null, "Program Finished", "Finished",
+                                            JOptionPane.INFORMATION_MESSAGE);
+              sourceButton.setText("Run");
+              running = false;
+            });
+          }
+        };
+
+        worker.execute();
+      } else {
+        running = false;
+        sourceButton.setText("Run");
+
+        if(worker != null) worker.cancel(true);
       }
     }
   }
