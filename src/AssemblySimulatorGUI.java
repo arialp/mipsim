@@ -4,9 +4,14 @@
  * and register state.
  */
 import javax.swing.*;
+import javax.swing.plaf.basic.BasicScrollBarUI;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 
 public class AssemblySimulatorGUI {
   private static final Font TEXT_FONT = new Font("Cascadia Mono", Font.PLAIN, 16);
@@ -31,7 +36,7 @@ public class AssemblySimulatorGUI {
   public AssemblySimulatorGUI() {
     JFrame frame = new JFrame("MIPS Assembly Simulator");
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    frame.setSize(1280, 720);
+    frame.setSize(1600, 900);
     frame.getContentPane().setBackground(Color.BLACK);
 
     JPanel mainPanel = new JPanel(new GridBagLayout());
@@ -48,7 +53,7 @@ public class AssemblySimulatorGUI {
     memoryPanelConstraints.gridx = 0;
     memoryPanelConstraints.gridy = 1;
     memoryPanelConstraints.weightx = 1;
-    memoryPanelConstraints.weighty = 0.48;
+    memoryPanelConstraints.weighty = 0.5;
     memoryPanelConstraints.fill = GridBagConstraints.BOTH;
 
     GridBagConstraints bottomPanelConstraints = new GridBagConstraints();
@@ -61,9 +66,11 @@ public class AssemblySimulatorGUI {
     JPanel topPanel = new JPanel(new GridLayout(1, 3));
     topPanel.setBackground(Color.BLACK);
 
+    // Assembly input area
     assemblyInput = createTextArea("ASSEMBLY INSTRUCTIONS");
-    topPanel.add(new JScrollPane(assemblyInput));
+    topPanel.add(createStyledScrollPane(assemblyInput));
 
+    // Machine code output area
     JPanel machineCodePanel = new JPanel(new BorderLayout());
     machineCodePanel.setBackground(Color.BLACK);
     machineCodePanel.setBorder(
@@ -72,8 +79,9 @@ public class AssemblySimulatorGUI {
 
     machineCodeOutput = createTextArea();
     machineCodeOutput.setEditable(false);
-    machineCodePanel.add(new JScrollPane(machineCodeOutput), BorderLayout.CENTER);
+    machineCodePanel.add(createStyledScrollPane(machineCodeOutput), BorderLayout.CENTER);
 
+    // Machine code display options
     JPanel buttonPanel = new JPanel(new GridLayout(1, 2));
     buttonPanel.setBackground(Color.BLACK);
     JButton hexButton = createButton("HEX");
@@ -84,6 +92,7 @@ public class AssemblySimulatorGUI {
     machineCodePanel.add(buttonPanel, BorderLayout.SOUTH);
     topPanel.add(machineCodePanel);
 
+    // Register file display area
     JPanel registerFilePanel = new JPanel(new GridLayout(1, 2));
     registerFilePanel.setBackground(Color.BLACK);
     registerFilePanel.setBorder(
@@ -95,44 +104,49 @@ public class AssemblySimulatorGUI {
     registerFileRight = createTextArea();
     registerFileRight.setEditable(false);
 
-    registerFilePanel.add(new JScrollPane(registerFileLeft));
-    registerFilePanel.add(new JScrollPane(registerFileRight));
+    registerFilePanel.add(createStyledScrollPane(registerFileLeft));
+    registerFilePanel.add(createStyledScrollPane(registerFileRight));
 
     topPanel.add(registerFilePanel);
     mainPanel.add(topPanel, topPanelConstraints);
 
+    // Memory display area
     JPanel memoryPanel = new JPanel(new GridLayout(1, 2));
     memoryPanel.setBackground(Color.BLACK);
 
     instructionMemoryOutput = createTextArea("INSTRUCTION MEMORY");
     instructionMemoryOutput.setEditable(false);
-    memoryPanel.add(new JScrollPane(instructionMemoryOutput));
+    memoryPanel.add(createStyledScrollPane(instructionMemoryOutput));
 
     dataMemoryOutput = createTextArea("DATA MEMORY");
     dataMemoryOutput.setEditable(false);
-    memoryPanel.add(new JScrollPane(dataMemoryOutput));
+    memoryPanel.add(createStyledScrollPane(dataMemoryOutput));
 
     mainPanel.add(memoryPanel, memoryPanelConstraints);
 
+    // Bottom panel with control buttons
     JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
     bottomPanel.setBackground(Color.BLACK);
 
+    JButton loadFileButton = createButton("Load File");
     JButton assembleButton = createButton("Assemble");
     JButton runButton = createButton("Run");
     JButton stepButton = createButton("Next Step");
     JButton resetButton = createButton("Reset");
 
+    bottomPanel.add(loadFileButton);
     bottomPanel.add(assembleButton);
     bottomPanel.add(runButton);
     bottomPanel.add(stepButton);
     bottomPanel.add(resetButton);
-    mainPanel.add(bottomPanel, bottomPanelConstraints);
 
+    mainPanel.add(bottomPanel, bottomPanelConstraints);
     frame.add(mainPanel);
     frame.setVisible(true);
 
-    hexButton.addActionListener(e->updateMachineCode(true));
-    binaryButton.addActionListener(e->updateMachineCode(false));
+    hexButton.addActionListener(_->updateMachineCode(true));
+    binaryButton.addActionListener(_->updateMachineCode(false));
+    loadFileButton.addActionListener(new LoadListener());
     assembleButton.addActionListener(new AssembleListener());
     runButton.addActionListener(new RunListener());
     stepButton.addActionListener(new StepListener());
@@ -156,6 +170,28 @@ public class AssemblySimulatorGUI {
             BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.GRAY), title, 2,
                                              2, TEXT_FONT, Color.WHITE));
     return textArea;
+  }
+
+  /**
+   * Creates a JScrollPane with a custom-styled vertical and horizontal scrollbar. The scrollbars
+   * are modernized with a minimalist design and custom colors.
+   *
+   * @param textArea The JTextArea to be added to the scroll pane.
+   *
+   * @return A JScrollPane with styled scrollbars.
+   */
+  private JScrollPane createStyledScrollPane(JTextArea textArea) {
+    JScrollPane scrollPane = new JScrollPane(textArea);
+
+    // Set the background color for scrollbars
+    scrollPane.getVerticalScrollBar().setBackground(Color.DARK_GRAY);
+    scrollPane.getHorizontalScrollBar().setBackground(Color.DARK_GRAY);
+
+    // Apply custom UI to the scrollbars
+    scrollPane.getVerticalScrollBar().setUI(new ModernScrollBarUI());
+    scrollPane.getHorizontalScrollBar().setUI(new ModernScrollBarUI());
+
+    return scrollPane;
   }
 
   /**
@@ -310,6 +346,100 @@ public class AssemblySimulatorGUI {
   }
 
   /**
+   * A custom implementation of BasicScrollBarUI to provide a modern and minimalist look for
+   * scrollbars. This class customizes the thumb, track, and buttons of the scrollbar.
+   */
+  private static class ModernScrollBarUI extends BasicScrollBarUI {
+    private static final int THUMB_SIZE = 8;
+
+    /**
+     * Configures the colors of the scrollbar's thumb and track. The thumb is styled with a
+     * translucent color, while the track is fully transparent.
+     */
+    @Override
+    protected void configureScrollBarColors() {
+      this.thumbColor = new Color(200, 200, 200, 200); // Light gray with transparency
+      this.trackColor = new Color(50, 50, 50, 0); // Fully transparent
+    }
+
+    /**
+     * Sets the preferred size of the scrollbar to a fixed width/height. This defines the thickness
+     * of the scrollbar.
+     *
+     * @param c The scrollbar component.
+     *
+     * @return A Dimension object representing the scrollbar's width and height.
+     */
+    @Override
+    public Dimension getPreferredSize(JComponent c) {
+      return new Dimension(THUMB_SIZE, THUMB_SIZE);
+    }
+
+    /**
+     * Creates an invisible button for the scrollbar's decrease action. These buttons are hidden to
+     * achieve a minimalist design.
+     *
+     * @param orientation The orientation of the button (e.g., NORTH, SOUTH).
+     *
+     * @return A JButton with no visible content or functionality.
+     */
+    @Override
+    protected JButton createDecreaseButton(int orientation) {
+      return createInvisibleButton();
+    }
+
+    /**
+     * Creates an invisible button for the scrollbar's increase action. These buttons are hidden to
+     * achieve a minimalist design.
+     *
+     * @param orientation The orientation of the button (e.g., NORTH, SOUTH).
+     *
+     * @return A JButton with no visible content or functionality.
+     */
+    @Override
+    protected JButton createIncreaseButton(int orientation) {
+      return createInvisibleButton();
+    }
+
+    /**
+     * Paints the scrollbar's thumb with a rounded rectangle shape and anti-aliasing for smooth
+     * edges.
+     *
+     * @param g The Graphics object used for painting.
+     * @param c The component to be painted.
+     * @param thumbBounds The bounding rectangle of the scrollbar thumb.
+     */
+    @Override
+    protected void paintThumb(Graphics g, JComponent c, Rectangle thumbBounds) {
+      Graphics2D g2 = (Graphics2D) g.create();
+      g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+      g2.setColor(thumbColor);
+      g2.fillRoundRect(thumbBounds.x, thumbBounds.y, thumbBounds.width, thumbBounds.height, 6, 6);
+
+      g2.dispose();
+    }
+
+    /**
+     * Creates an invisible button for scrollbar controls. These buttons have no dimensions or
+     * functionality, ensuring they remain hidden.
+     *
+     * @return A JButton with no visible content or functionality.
+     */
+    private JButton createInvisibleButton() {
+      JButton button = new JButton();
+      button.setPreferredSize(new Dimension(0, 0));
+      button.setMinimumSize(new Dimension(0, 0));
+      button.setMaximumSize(new Dimension(0, 0));
+      button.setFocusable(false);
+      button.setBorderPainted(false);
+      button.setOpaque(false);
+      button.setContentAreaFilled(false);
+      return button;
+    }
+  }
+
+  /**
    * Event listener for the Assemble button. Initializes the simulator and updates all displays.
    */
   private class AssembleListener implements ActionListener {
@@ -365,6 +495,33 @@ public class AssemblySimulatorGUI {
         updateInstructionMemory();
         updateRegisterFile();
         updateDataMemory();
+      }
+    }
+  }
+
+  private class LoadListener implements ActionListener {
+    public void actionPerformed(ActionEvent e) {
+      FileDialog fileDialog = new FileDialog((Frame) null, "Load Assembly File", FileDialog.LOAD);
+      fileDialog.setDirectory(System.getProperty("user.dir"));
+      fileDialog.setFile("*.asm;*.txt");
+      fileDialog.setVisible(true);
+
+      String selectedFile = fileDialog.getFile();
+      String selectedDirectory = fileDialog.getDirectory();
+
+      if(selectedFile != null && selectedDirectory != null){
+        File file = new File(selectedDirectory, selectedFile);
+        try(BufferedReader reader = new BufferedReader(new FileReader(file))){
+          assemblyInput.setText("");
+          String line;
+          while((line = reader.readLine()) != null){
+            assemblyInput.append(line + "\n");
+          }
+        } catch(IOException ioException){
+          JOptionPane.showMessageDialog(null,
+                                        "Error while reading file: " + ioException.getMessage(),
+                                        "Error", JOptionPane.ERROR_MESSAGE);
+        }
       }
     }
   }
