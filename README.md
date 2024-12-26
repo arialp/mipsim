@@ -1,4 +1,4 @@
-# mipsim - A MIPS Processor Simulator
+# mipsim - A MIPS Processor sim.Simulator
 
 ## Project Objective
 To simulate a subset of the MIPS 32-bit architecture, enabling users to write, assemble, and execute MIPS assembly code in a simulated environment.
@@ -7,7 +7,7 @@ To simulate a subset of the MIPS 32-bit architecture, enabling users to write, a
 The design and implementation of mipsim were carried out in several systematic phases:
 
 
-### 1. Assembler Implementation
+### 1. sim.Assembler Implementation
 
 To convert textual MIPS assembly code into binary machine code:
 
@@ -15,7 +15,7 @@ To convert textual MIPS assembly code into binary machine code:
   - A HashMap was used for register names ($zero, $at, etc.).
   - Supported instruction opcodes (e.g., add, sub, lw) and function codes for R-type instructions were also mapped in HashMap objects.
 
-- Multi-Pass Assembler:
+- Multi-Pass sim.Assembler:
   - The assembler processes the input in three passes:
     - Handle comments and clean assembly lines.
     - Parse labels and associate them with memory addresses.
@@ -53,7 +53,7 @@ To convert textual MIPS assembly code into binary machine code:
     - Highlight the program counter (PC) during simulation.
 
 ---
-### 5. Simulator
+### 5. sim.Simulator
 The core of mipsim, responsible for executing machine code:
 
 - Initialization:
@@ -111,7 +111,7 @@ javac -d bin -sourcepath src src/*.java
 After compiling the project, run the simulator using the following command:
 
 ```
-java -cp bin AssemblySimulatorGUI
+java -cp bin sim.AssemblySimulatorGUI
 ```
 
 #### Usage:
