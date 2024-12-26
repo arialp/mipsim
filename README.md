@@ -1,4 +1,4 @@
-# mipsim - A MIPS Processor sim.Simulator
+# mipsim - A MIPS Processor Simulator
 
 ## Project Objective
 To simulate a subset of the MIPS 32-bit architecture, enabling users to write, assemble, and execute MIPS assembly code in a simulated environment.
