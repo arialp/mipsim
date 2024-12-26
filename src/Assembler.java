@@ -8,6 +8,11 @@ import java.util.List;
 import java.util.Map;
 
 public class Assembler {
+  private static final String[] registerNames = {"$zero", "$at", "$v0", "$v1", "$a0", "$a1", "$a2",
+                                                 "$a3", "$t0", "$t1", "$t2", "$t3", "$t4", "$t5",
+                                                 "$t6", "$t7", "$s0", "$s1", "$s2", "$s3", "$s4",
+                                                 "$s5", "$s6", "$s7", "$t8", "$t9", "$k0", "$k1",
+                                                 "$gp", "$sp", "$fp", "$ra"};
 
   /**
    * Map of labels and their corresponding memory addresses.
@@ -105,7 +110,7 @@ public class Assembler {
    *
    * @return A list of binary machine code instructions.
    */
-  public static List<String> convertToBinary(List<String> assemblyLines) {
+  private static List<String> convertToBinary(List<String> assemblyLines) {
     List<String> binaryCode = new ArrayList<>();
     int currentLine = 0;
 
@@ -137,17 +142,28 @@ public class Assembler {
             String rd = registerToBinary(parts[1]);
             String rt = registerToBinary(parts[2]);
             int shiftAmount = Integer.parseInt(parts[3]);
+
+            if(shiftAmount > 31){
+              System.err.println("Shift amount must be less than 32: " + line);
+              break;
+            }
+
             String sa = toBinary(shiftAmount, 5);
             String funct = functMap.get(instruction);
             binaryCode.add(binaryInstruction + "00000" + rt + rd + sa + funct);
             break;
           }
-
           // I-format instructions
           case "addi":{
             String rt = registerToBinary(parts[1]);
             String rs = registerToBinary(parts[2]);
             int immediate = Integer.parseInt(parts[3]);
+
+            if(immediate < -32768 || immediate > 32767){
+              System.err.println("Immediate value out of range: " + line);
+              break;
+            }
+
             binaryCode.add(binaryInstruction + rs + rt + toBinary(immediate, 16));
             break;
           }
@@ -157,6 +173,12 @@ public class Assembler {
             String offsetAndRs = parts[2];
             String[] offsetParts = offsetAndRs.split("[()]");
             int offset = Integer.parseInt(offsetParts[0]);
+
+            if(offset < -32768 || offset > 32767){
+              System.err.println("Offset value out of range: " + line);
+              break;
+            }
+
             String rs = registerToBinary(offsetParts[1]);
             binaryCode.add(binaryInstruction + rs + rt + toBinary(offset, 16));
             break;
@@ -178,7 +200,6 @@ public class Assembler {
             }
             break;
           }
-
           // J-format instructions
           case "j":
           case "jal":{
@@ -187,7 +208,7 @@ public class Assembler {
             if(address == null){
               System.err.println("Label not found: " + label);
             } else {
-              // Convert to 26-bit word address (remove bottom 2 bits and top 4 bits)
+              // Compress 32 bits into 26 bits
               int targetAddress = (address >> 2)&0x03FFFFFF;
               binaryCode.add(binaryInstruction + toBinary(targetAddress, 26));
             }
@@ -199,7 +220,6 @@ public class Assembler {
             binaryCode.add("000000" + rs + "00000" + "00000" + "00000" + funct);
             break;
           }
-
           default:{
             System.err.println("Unsupported instruction: " + instruction);
           }
@@ -221,40 +241,12 @@ public class Assembler {
    * @return The binary representation of the register.
    */
   private static String registerToBinary(String register) {
-    Map<String, String> registerMap = new HashMap<>() {{
-      put("$zero", "00000");
-      put("$at", "00001");
-      put("$v0", "00010");
-      put("$v1", "00011");
-      put("$a0", "00100");
-      put("$a1", "00101");
-      put("$a2", "00110");
-      put("$a3", "00111");
-      put("$t0", "01000");
-      put("$t1", "01001");
-      put("$t2", "01010");
-      put("$t3", "01011");
-      put("$t4", "01100");
-      put("$t5", "01101");
-      put("$t6", "01110");
-      put("$t7", "01111");
-      put("$s0", "10000");
-      put("$s1", "10001");
-      put("$s2", "10010");
-      put("$s3", "10011");
-      put("$s4", "10100");
-      put("$s5", "10101");
-      put("$s6", "10110");
-      put("$s7", "10111");
-      put("$t8", "11000");
-      put("$t9", "11001");
-      put("$k0", "11010");
-      put("$k1", "11011");
-      put("$gp", "11100");
-      put("$sp", "11101");
-      put("$fp", "11110");
-      put("$ra", "11111");
-    }};
+    Map<String, String> registerMap = new HashMap<>();
+    for(int i = 0; i < registerNames.length; i++){
+      String binary = String.format("%5s", Integer.toBinaryString(i)).replace(' ', '0');
+      registerMap.put(registerNames[i], binary);
+    }
+
     return registerMap.getOrDefault(register, "00000");
   }
 
