@@ -76,23 +76,23 @@ The core of mipsim, responsible for executing machine code:
 ### Supported Instructions
 mipsim supports a subset of MIPS instructions across R, I, and J formats. Below are the supported instructions:
 
-|Instruction|Type|Opcode/Function|Format|
-|---|---|---|---|
-|	add	|	R	| 100000  | add rd, rs, rt
-|	sub	|	R	| 100010  | sub rd, rs, rt
-|	and	|	R	| 100100  | and rd, rs, rt
-|	or	|	R	| 100101  | or rd, rs, rt
-|	slt	|	R	| 101010  | slt rd, rs, rt
-|	sll	|	R	| 000000  | sll rd, rt, sa
-|	srl	|	R	| 000010  | srl rd, rt, sa
-|	addi|	I	| 001000  | addi rt, rs, imm
-|	lw	|	I	| 100011  | lw rt, offset(rs)
-|	sw	|	I	| 101011  | sw rt, offset(rs)
-|	beq	|	I	| 000100  | beq rs, rt, label
-|	bne	|	I	| 000101  | bne rs, rt, label
-|	j		|	J	| 000010  | j label
-|	jal	|	J	| 000011  | jal label
-|	jr	|	J	| 001000  | jr rs
+| Instruction | Type | Opcode/Function | Format            |
+|-------------|------|-----------------|-------------------|
+| 	add	       | 	R	  | 100000          | add rd, rs, rt    |
+| 	sub	       | 	R	  | 100010          | sub rd, rs, rt    |
+| 	and	       | 	R	  | 100100          | and rd, rs, rt    |
+| 	or	        | 	R	  | 100101          | or rd, rs, rt     |
+| 	slt	       | 	R	  | 101010          | slt rd, rs, rt    |
+| 	sll	       | 	R	  | 000000          | sll rd, rt, sa    |
+| 	srl	       | 	R	  | 000010          | srl rd, rt, sa    |
+| 	addi       | 	I	  | 001000          | addi rt, rs, imm  |
+| 	lw	        | 	I	  | 100011          | lw rt, offset(rs) |
+| 	sw	        | 	I	  | 101011          | sw rt, offset(rs) |
+| 	beq	       | 	I	  | 000100          | beq rs, rt, label |
+| 	bne	       | 	I	  | 000101          | bne rs, rt, label |
+| 	j		        | 	J	  | 000010          | j label           |
+| 	jal	       | 	J	  | 000011          | jal label         |
+| 	jr	        | 	J	  | 001000          | jr rs             |
 
 ### Build
 To compile and build the project, follow these steps:
@@ -135,14 +135,9 @@ sw $t2, 0($sp)
 
 Click "Assemble" to generate machine code, then use the "Run" or "Next Step" buttons to execute the program.
 
-### Features
-- Assembly Code Support:
-  - Recognizes a subset of MIPS instructions (R, I, and J formats).
-- Memory Management:
-  - Ensures MIPS-compatible memory alignment and addressing.
-- Real-Time Simulation:
-  - Step-by-step execution of instructions with state updates in GUI.
-- Visual Feedback:
-  - Displays binary/hexadecimal machine code and highlights PC during execution.
-- Reset Functionality:
-  - Allows users to restart the simulation without reloading the program.
+### Contributors
+#### Konya Food and Agriculture University
+#### Computer Engineering Department
+- Alp Eren Arı, 212010020039
+- Yılmaz Büyük, 212010020077
+- Emir Mutlu, 212010020070
