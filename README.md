@@ -51,9 +51,12 @@ To convert textual MIPS assembly code into binary machine code:
   - Visual Components:
     - Text areas for assembly input, machine code output, instruction memory, data memory, and register files.
     - Highlight the program counter (PC) during simulation.
-
+  - Clock Rate Selector:
+    - Users can set a clock rate (in milliseconds) to control the speed of execution for continuous "Run."
+  - Stop Button:
+    - During execution, the "Run" button toggles to "Stop," allowing users to pause simulation.
 ---
-### 5. sim.Simulator
+### 5. Simulator
 The core of mipsim, responsible for executing machine code:
 
 - Initialization:
@@ -72,6 +75,10 @@ The core of mipsim, responsible for executing machine code:
 - Reset:
   - Resets the program counter, register file, and memory to their initial states.
 
+---
+### 6. JUnit Integration
+- Unit Testing:
+	- JUnit tests are implemented to validate assembler functionality, instruction execution, memory operations, and register file updates.
 ---
 ### Supported Instructions
 mipsim supports a subset of MIPS instructions across R, I, and J formats. Below are the supported instructions:
@@ -120,7 +127,8 @@ The GUI will launch, allowing you to:
 - Input MIPS assembly code.
 - Assemble the code into machine code.
 - Execute the code step-by-step or run the entire program.
-- View the states of instruction memory, data memory, and registers.
+- Set clock rate for the execution.
+- Stop the execution using the "Stop" button.
 
 #### Example Input:
 
@@ -136,8 +144,7 @@ sw $t2, 0($sp)
 Click "Assemble" to generate machine code, then use the "Run" or "Next Step" buttons to execute the program.
 
 ### Contributors
-#### Konya Food and Agriculture University
-#### Computer Engineering Department
+ Konya Food and Agriculture University - Computer Engineering Department
 - Alp Eren Arı, 212010020039
 - Yılmaz Büyük, 212010020077
 - Emir Mutlu, 212010020070
