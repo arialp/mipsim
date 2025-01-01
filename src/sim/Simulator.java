@@ -109,6 +109,10 @@ public class Simulator {
         }
         break;
 
+      case "101010":
+        targetAddress = Integer.parseInt(instruction.substring(6),2);
+        break;
+
       case "000010": // J-Type (j)
       case "000011": // J-Type (jal)
         targetAddress = Integer.parseInt(instruction.substring(6), 2);
@@ -141,6 +145,9 @@ public class Simulator {
         break;
       case "000101": // bne
         bne();
+        break;
+      case "101010":
+        kasımhoca();
         break;
       case "000010": // j
         jump();
@@ -237,6 +244,11 @@ public class Simulator {
       programCounter = programCounter + 4 + (immediate * 4); // Branch to target address
       isBranchOrJump = true;
     }
+  }
+
+  private void kasımhoca() {
+    programCounter = targetAddress;
+    isBranchOrJump = true;
   }
 
   /**
