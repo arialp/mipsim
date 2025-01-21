@@ -1,6 +1,7 @@
 package test;
 
 import org.junit.jupiter.api.Test;
+import sim.Assembler;
 import sim.Simulator;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -8,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class SimulatorTest {
 
   @Test
-  void testBasicInstructions() {
+  void testBasicInstructions() throws Assembler.AssemblerException {
     String testCode = """
                       addi $t1, $zero, 20
                       addi $t0, $zero, 5
@@ -29,7 +30,7 @@ class SimulatorTest {
   }
 
   @Test
-  void testMemoryOperations() {
+  void testMemoryOperations() throws Assembler.AssemblerException {
     String testCode = """
                       addi $t0, $zero, 170
                       addi $t1, $zero, 204
@@ -48,7 +49,7 @@ class SimulatorTest {
   }
 
   @Test
-  void testControlFlow() {
+  void testControlFlow() throws Assembler.AssemblerException {
     String testCode = """
                       addi $t1, $zero, -32768
                       addi $s0, $zero, 1

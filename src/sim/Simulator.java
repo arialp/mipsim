@@ -24,8 +24,9 @@ public class Simulator {
    * instruction memory, Initializes data memory and register file.
    *
    * @param assemblyCode MIPS assembly code to be executed
+   * @throws Assembler.AssemblerException if there is an error during assembly
    */
-  public Simulator(String assemblyCode) {
+  public Simulator(String assemblyCode) throws Assembler.AssemblerException {
     Assembler assembler = new Assembler();
     List<String> binaryInstructions = assembler.assemble(assemblyCode);
 

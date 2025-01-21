@@ -459,12 +459,18 @@ public class AssemblySimulatorGUI {
   private class AssembleListener implements ActionListener {
     public void actionPerformed(ActionEvent e) {
       String assemblyCode = assemblyInput.getText();
-      simulator = new Simulator(assemblyCode);
-
-      updateMachineCode(displayInHex);
-      updateInstructionMemory();
-      updateRegisterFile();
-      updateDataMemory();
+      try {
+        simulator = new Simulator(assemblyCode);
+        updateMachineCode(displayInHex);
+        updateInstructionMemory();
+        updateRegisterFile();
+        updateDataMemory();
+      } catch (Assembler.AssemblerException ex) {
+        JOptionPane.showMessageDialog(null,
+                                    ex.getMessage(),
+                                    "Assembly Error",
+                                    JOptionPane.ERROR_MESSAGE);
+      }
     }
   }
 

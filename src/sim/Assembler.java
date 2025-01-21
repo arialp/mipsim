@@ -10,6 +10,12 @@ import java.util.List;
 import java.util.Map;
 
 public class Assembler {
+  public static class AssemblerException extends Exception {
+    public AssemblerException(String message) {
+      super(message);
+    }
+  }
+
   private static final String[] registerNames = {"$zero", "$at", "$v0", "$v1", "$a0", "$a1", "$a2",
                                                  "$a3", "$t0", "$t1", "$t2", "$t3", "$t4", "$t5",
                                                  "$t6", "$t7", "$s0", "$s1", "$s2", "$s3", "$s4",
@@ -68,7 +74,7 @@ public class Assembler {
    *
    * @return A list of binary machine code instructions.
    */
-  public List<String> assemble(String assemblyCode) {
+  public List<String> assemble(String assemblyCode) throws AssemblerException {
     List<String> binaryInstructions;
     String[] lines = assemblyCode.split("\n");
     List<String> assemblyLines = new ArrayList<>();
@@ -112,7 +118,7 @@ public class Assembler {
    *
    * @return A list of binary machine code instructions.
    */
-  private static List<String> convertToBinary(List<String> assemblyLines) {
+  private static List<String> convertToBinary(List<String> assemblyLines) throws AssemblerException {
     List<String> binaryCode = new ArrayList<>();
     int currentLine = 0;
 
@@ -146,8 +152,7 @@ public class Assembler {
             int shiftAmount = Integer.parseInt(parts[3]);
 
             if(shiftAmount > 31){
-              System.err.println("Shift amount must be less than 32: " + line);
-              break;
+              throw new AssemblerException("Shift amount must be less than 32 in instruction: " + line);
             }
 
             String sa = toBinary(shiftAmount, 5);
@@ -162,8 +167,7 @@ public class Assembler {
             int immediate = Integer.parseInt(parts[3]);
 
             if(immediate < -32768 || immediate > 32767){
-              System.err.println("Immediate value out of range: " + line);
-              break;
+              throw new AssemblerException("Immediate value out of range (-32768 to 32767): " + immediate + " in instruction: " + line);
             }
 
             binaryCode.add(binaryInstruction + rs + rt + toBinary(immediate, 16));
@@ -177,8 +181,7 @@ public class Assembler {
             int offset = Integer.parseInt(offsetParts[0]);
 
             if(offset < -32768 || offset > 32767){
-              System.err.println("Offset value out of range: " + line);
-              break;
+              throw new AssemblerException("Offset value out of range (-32768 to 32767): " + offset + " in instruction: " + line);
             }
 
             String rs = registerToBinary(offsetParts[1]);
@@ -193,13 +196,12 @@ public class Assembler {
             Integer targetAddress = labelMap.get(label); // Label address
 
             if(targetAddress == null){
-              System.err.println("Label not found: " + label);
-            } else {
-              // Calculate relative offset
-              int currentPC = currentLine * 4 + 0x00400000;
-              int relativeOffset = (targetAddress - (currentPC + 4)) / 4;
-              binaryCode.add(binaryInstruction + rs + rt + toBinary(relativeOffset, 16));
+              throw new AssemblerException("Label not found: " + label + " in instruction: " + line);
             }
+            // Calculate relative offset
+            int currentPC = currentLine * 4 + 0x00400000;
+            int relativeOffset = (targetAddress - (currentPC + 4)) / 4;
+            binaryCode.add(binaryInstruction + rs + rt + toBinary(relativeOffset, 16));
             break;
           }
           // J-format instructions
@@ -208,12 +210,11 @@ public class Assembler {
             String label = parts[1];
             Integer address = labelMap.get(label); // Absolute label address
             if(address == null){
-              System.err.println("Label not found: " + label);
-            } else {
-              // Compress 32 bits into 26 bits
-              int targetAddress = (address >> 2)&0x03FFFFFF;
-              binaryCode.add(binaryInstruction + toBinary(targetAddress, 26));
+              throw new AssemblerException("Label not found: " + label + " in instruction: " + line);
             }
+            // Compress 32 bits into 26 bits
+            int targetAddress = (address >> 2)&0x03FFFFFF;
+            binaryCode.add(binaryInstruction + toBinary(targetAddress, 26));
             break;
           }
           case "jr":{
@@ -223,11 +224,13 @@ public class Assembler {
             break;
           }
           default:{
-            System.err.println("Unsupported instruction: " + instruction);
+            throw new AssemblerException("Unsupported instruction: " + instruction);
           }
         }
-      } catch(NumberFormatException|ArrayIndexOutOfBoundsException e){
-        System.err.println("Error processing instruction: " + line + e);
+      } catch(NumberFormatException e){
+        throw new AssemblerException("Invalid number format in instruction: " + line);
+      } catch(ArrayIndexOutOfBoundsException e){
+        throw new AssemblerException("Invalid instruction format: " + line);
       }
 
       currentLine++;
