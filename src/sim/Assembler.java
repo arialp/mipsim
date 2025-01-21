@@ -40,7 +40,6 @@ public class Assembler {
     put("sw", "101011");
     put("beq", "000100");
     put("bne", "000101");
-    put("kasımhoca", "101010");
 
     // J-Format instructions
     put("j", "000010");
@@ -201,14 +200,6 @@ public class Assembler {
               int relativeOffset = (targetAddress - (currentPC + 4)) / 4;
               binaryCode.add(binaryInstruction + rs + rt + toBinary(relativeOffset, 16));
             }
-            break;
-          }
-          case "kasımhoca":{
-            int currentPC = currentLine * 4 + 0x00400000;
-            int immediate = Integer.parseInt(parts[1]);
-            int targetAddress = currentPC + ((immediate * 4));
-            String target = toBinary(targetAddress, 26);
-            binaryCode.add(binaryInstruction + target);
             break;
           }
           // J-format instructions

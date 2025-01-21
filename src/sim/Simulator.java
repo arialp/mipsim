@@ -146,9 +146,6 @@ public class Simulator {
       case "000101": // bne
         bne();
         break;
-      case "101010":
-        kasımhoca();
-        break;
       case "000010": // j
         jump();
         break;
@@ -244,11 +241,6 @@ public class Simulator {
       programCounter = programCounter + 4 + (immediate * 4); // Branch to target address
       isBranchOrJump = true;
     }
-  }
-
-  private void kasımhoca() {
-    programCounter = targetAddress;
-    isBranchOrJump = true;
   }
 
   /**
